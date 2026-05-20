@@ -1,0 +1,129 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { eq, and } from "drizzle-orm";
+import { auth } from "@/auth";
+import { db, submissions } from "@/lib/db";
+import { parseSubmissionForm } from "@/lib/submissions";
+import { submissionsOpen } from "@/lib/dates";
+import { isAllowedEmail } from "@/lib/admin";
+
+export type ActionState =
+  | { ok: false; error: string }
+  | { ok: true; id: string }
+  | null;
+
+export async function createSubmission(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const session = await auth();
+  if (!session?.user?.email || !isAllowedEmail(session.user.email)) {
+    return { ok: false, error: "You must sign in with a Forcepoint email." };
+  }
+  if (!submissionsOpen()) {
+    return { ok: false, error: "Submissions are closed." };
+  }
+
+  let input;
+  try {
+    input = parseSubmissionForm(formData);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Invalid input";
+    return { ok: false, error: msg };
+  }
+
+  const [row] = await db
+    .insert(submissions)
+    .values({
+      title: input.title,
+      description: input.description,
+      motivation: input.motivation,
+      developers: input.developers,
+      teamContact: input.teamContact,
+      submittedByEmail: session.user.email,
+      submittedByName: session.user.name ?? null,
+    })
+    .returning({ id: submissions.id });
+
+  revalidatePath("/ideas");
+  revalidatePath("/my-submissions");
+  revalidatePath("/admin");
+  redirect(`/ideas/${row.id}`);
+}
+
+export async function updateSubmission(
+  id: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return { ok: false, error: "Not signed in." };
+  }
+  if (!submissionsOpen()) {
+    return { ok: false, error: "Submissions are closed; edits are locked." };
+  }
+
+  const existing = await db.query.submissions.findFirst({
+    where: eq(submissions.id, id),
+  });
+  if (!existing) return { ok: false, error: "Not found." };
+  if (existing.submittedByEmail.toLowerCase() !== session.user.email.toLowerCase()) {
+    return { ok: false, error: "You can only edit your own submission." };
+  }
+
+  let input;
+  try {
+    input = parseSubmissionForm(formData);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Invalid input";
+    return { ok: false, error: msg };
+  }
+
+  await db
+    .update(submissions)
+    .set({
+      title: input.title,
+      description: input.description,
+      motivation: input.motivation,
+      developers: input.developers,
+      teamContact: input.teamContact,
+      // any edit reverts review state
+      status: "pending",
+      reviewNote: null,
+      reviewedAt: null,
+      reviewedByEmail: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(submissions.id, id));
+
+  revalidatePath("/ideas");
+  revalidatePath(`/ideas/${id}`);
+  revalidatePath("/my-submissions");
+  revalidatePath("/admin");
+  redirect(`/ideas/${id}`);
+}
+
+export async function deleteSubmission(id: string): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Not signed in.");
+  if (!submissionsOpen()) {
+    throw new Error("Submissions are closed; deletes are locked.");
+  }
+
+  await db
+    .delete(submissions)
+    .where(
+      and(
+        eq(submissions.id, id),
+        eq(submissions.submittedByEmail, session.user.email),
+      ),
+    );
+
+  revalidatePath("/ideas");
+  revalidatePath("/my-submissions");
+  revalidatePath("/admin");
+  redirect("/my-submissions");
+}
