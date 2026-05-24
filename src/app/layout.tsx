@@ -45,29 +45,29 @@ export default async function RootLayout({
             </Link>
 
             <nav className="hidden sm:flex items-center gap-5 text-sm text-[color:var(--color-muted)]">
-              <Link href="/ideas" className="hover:text-[color:var(--color-foreground)] transition">
-                Browse
-              </Link>
               <Link href="/rules" className="hover:text-[color:var(--color-foreground)] transition">
                 Rules
               </Link>
               {session && (
-                <>
-                  <Link href="/submit" className="hover:text-[color:var(--color-foreground)] transition">
-                    Submit
-                  </Link>
-                  <Link href="/my-submissions" className="hover:text-[color:var(--color-foreground)] transition">
-                    My ideas
-                  </Link>
-                  {admin && (
-                    <Link
-                      href="/admin"
-                      className="text-sm text-[color:var(--color-accent)] hover:brightness-110"
-                    >
-                      ⚡ Admin
-                    </Link>
-                  )}
-                </>
+                <Link href="/submit" className="hover:text-[color:var(--color-foreground)] transition">
+                  Submit
+                </Link>
+              )}
+              {session && (
+                <Link href="/my-submissions" className="hover:text-[color:var(--color-foreground)] transition">
+                  My ideas
+                </Link>
+              )}
+              <Link href="/ideas" className="hover:text-[color:var(--color-foreground)] transition">
+                Browse
+              </Link>
+              {session && admin && (
+                <Link
+                  href="/admin"
+                  className="text-sm text-[color:var(--color-accent)] hover:brightness-110"
+                >
+                  ⚡ Admin
+                </Link>
               )}
             </nav>
 
