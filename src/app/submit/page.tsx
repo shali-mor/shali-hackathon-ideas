@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import {
@@ -24,7 +25,11 @@ export default async function SubmitPage() {
           <span className="text-[color:var(--color-foreground)]">
             {formatInTZ(SUBMISSION_DEADLINE)}
           </span>{" "}
-          (Asia/Jerusalem).
+          (Asia/Jerusalem).{" "}
+          <Link href="/rules" className="underline hover:text-[color:var(--color-foreground)]">
+            Read the rules first
+          </Link>{" "}
+          — teams of up to 3, SDLC ideas only.
         </p>
       </div>
 

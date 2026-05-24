@@ -39,7 +39,7 @@ const STEPS: { id: StepId; label: string; question: string; hint: string }[] = [
   { id: "title",      label: "Title",       question: "What are you calling it?",   hint: "Short and catchy. Max 80 characters." },
   { id: "idea",       label: "Idea",        question: "Describe the idea.",         hint: "What you'd build, how it works, what the demo looks like." },
   { id: "motivation", label: "Motivation",  question: "Why does it matter?",        hint: "Problem solved, who benefits, why this is worth a day." },
-  { id: "team",       label: "Team",        question: "Who's on the team?",         hint: "1–6 developers. Press Enter to add each." },
+  { id: "team",       label: "Team",        question: "Who's on the team?",         hint: "1–3 developers. Press Enter to add each." },
   { id: "contact",    label: "Contact",     question: "Best way to reach the team lead?", hint: "Slack handle or email." },
   { id: "review",     label: "Review",      question: "Review and submit.",         hint: "Check your answers before sending." },
 ];
@@ -84,7 +84,7 @@ export function SubmissionForm({
         return null;
       case "team":
         if (data.developers.length === 0) return "Add at least one developer.";
-        if (data.developers.length > 6) return "Up to 6 developers.";
+        if (data.developers.length > 3) return "Up to 3 developers.";
         return null;
       case "contact":
         if (data.teamContact.trim().length < 3) return "Add a Slack handle or email.";
@@ -438,7 +438,7 @@ function ChipInput({
       setInput("");
       return;
     }
-    if (values.length >= 6) return;
+    if (values.length >= 3) return;
     onChange([...values, cleaned]);
     setInput("");
   }
@@ -491,17 +491,17 @@ function ChipInput({
           placeholder={
             values.length === 0
               ? "Type a name and press Enter"
-              : values.length < 6
+              : values.length < 3
               ? "Add another"
               : ""
           }
-          disabled={values.length >= 6}
+          disabled={values.length >= 3}
           className="flex-1 min-w-[140px] bg-transparent px-1.5 py-0.5 text-sm outline-none disabled:cursor-not-allowed"
         />
       </div>
       <div className="mt-2 flex items-center justify-between text-xs text-[color:var(--color-muted)]">
         <span>Use comma or Enter to add. Backspace to remove.</span>
-        <span className="tabular-nums">{values.length} / 6</span>
+        <span className="tabular-nums">{values.length} / 3</span>
       </div>
     </div>
   );

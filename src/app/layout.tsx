@@ -48,6 +48,9 @@ export default async function RootLayout({
               <Link href="/ideas" className="hover:text-[color:var(--color-foreground)] transition">
                 Browse
               </Link>
+              <Link href="/rules" className="hover:text-[color:var(--color-foreground)] transition">
+                Rules
+              </Link>
               {session && (
                 <>
                   <Link href="/submit" className="hover:text-[color:var(--color-foreground)] transition">

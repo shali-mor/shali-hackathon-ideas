@@ -54,6 +54,9 @@ export default async function Home() {
           <Link href="/ideas" className="btn btn-ghost px-5 py-3">
             See ideas {accepted > 0 && <span className="ml-1 text-[color:var(--color-accent)]">({accepted})</span>}
           </Link>
+          <Link href="/rules" className="btn btn-ghost px-5 py-3">
+            Rules
+          </Link>
         </div>
 
         <div className="mt-12">

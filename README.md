@@ -10,6 +10,14 @@ A small Next.js site for collecting and reviewing ideas for the Forcepoint hacka
 | Hack day | **2026-06-09** |
 | Judging | **2026-06-10** (external judges) |
 
+## Rules
+
+1. **Teams of up to 3.** Maximum three developers per team. Smaller is fine.
+2. **In the office, full day.** Hacking happens in person.
+3. **SDLC ideas only.** Improve velocity, productivity, or quality. Product- or project-related is fine; customer-facing features are out of scope.
+4. **External judges.** Judges come from outside Forcepoint.
+5. **Judging is the day after.** Demos and judging are on 2026-06-10.
+
 ## How it works
 
 1. Sign in with your `@forcepoint.com` email (name + email, no password — there's no verification email, just trust).

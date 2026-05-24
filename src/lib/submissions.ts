@@ -46,7 +46,7 @@ export const submissionSchema = z.object({
   developers: z
     .array(z.string().transform(cleanLine).pipe(z.string().min(1).max(80)))
     .min(1, "At least one developer")
-    .max(6, "Up to 6 developers"),
+    .max(3, "Up to 3 developers"),
   teamContact: z
     .string()
     .transform(cleanLine)
