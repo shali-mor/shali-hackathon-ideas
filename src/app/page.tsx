@@ -29,9 +29,9 @@ export default async function Home() {
         </div>
 
         <h1 className="text-6xl sm:text-8xl font-bold leading-[0.95] tracking-tight">
-          Pitch.{" "}
-          <span className="gradient-text">Build.</span>{" "}
-          Ship.
+          Build.{" "}
+          <span className="gradient-text">Ship.</span>{" "}
+          Pitch.
         </h1>
 
         <p className="mt-6 text-lg text-[color:var(--color-muted)] max-w-xl">
