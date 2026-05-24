@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { StatusBadge } from "@/components/StatusBadge";
 import { isAdmin } from "@/lib/admin";
 import { submissionsOpen } from "@/lib/dates";
@@ -15,7 +15,7 @@ export default async function IdeaDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
+  const session = await getSession();
   const admin = isAdmin(session?.user?.email);
 
   const idea = await db.query.submissions.findFirst({
@@ -29,66 +29,79 @@ export default async function IdeaDetailPage({
 
   if (!canView) {
     return (
-      <div className="text-sm text-neutral-600 dark:text-neutral-400">
-        This idea isn&apos;t public yet.{" "}
-        <Link href="/ideas" className="underline">
-          Back to ideas
+      <div className="card text-center py-16">
+        <p className="text-[color:var(--color-muted)]">
+          This idea isn&apos;t public yet.
+        </p>
+        <Link href="/ideas" className="btn btn-ghost mt-4">
+          ← Back to ideas
         </Link>
       </div>
     );
   }
 
   return (
-    <article className="max-w-2xl">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{idea.title}</h1>
-        <StatusBadge status={idea.status} />
-      </div>
-      <p className="mt-2 text-xs text-neutral-500">
-        Submitted by {idea.submittedByName ?? idea.submittedByEmail}
-      </p>
+    <article className="max-w-3xl space-y-10">
+      <header className="space-y-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <StatusBadge status={idea.status} />
+          <span className="text-xs text-[color:var(--color-muted)]">
+            by {idea.submittedByName ?? idea.submittedByEmail}
+          </span>
+        </div>
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+          {idea.title}
+        </h1>
+      </header>
 
-      <section className="mt-6 space-y-1">
-        <h2 className="text-sm font-medium text-neutral-500">Idea</h2>
-        <p className="whitespace-pre-wrap text-sm">{idea.description}</p>
-      </section>
+      <Section title="Idea">
+        <p className="whitespace-pre-wrap leading-relaxed">{idea.description}</p>
+      </Section>
 
-      <section className="mt-6 space-y-1">
-        <h2 className="text-sm font-medium text-neutral-500">Motivation</h2>
-        <p className="whitespace-pre-wrap text-sm">{idea.motivation}</p>
-      </section>
+      <Section title="Motivation">
+        <p className="whitespace-pre-wrap leading-relaxed">{idea.motivation}</p>
+      </Section>
 
-      <section className="mt-6 space-y-1">
-        <h2 className="text-sm font-medium text-neutral-500">Developers</h2>
-        <ul className="text-sm list-disc list-inside">
+      <Section title="Developers">
+        <div className="flex flex-wrap gap-2">
           {idea.developers.map((d) => (
-            <li key={d}>{d}</li>
+            <span
+              key={d}
+              className="pill border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]/70 text-[color:var(--color-foreground)]"
+            >
+              {d}
+            </span>
           ))}
-        </ul>
-      </section>
+        </div>
+      </Section>
 
-      <section className="mt-6 space-y-1">
-        <h2 className="text-sm font-medium text-neutral-500">Team contact</h2>
+      <Section title="Team contact">
         <p className="text-sm">{idea.teamContact}</p>
-      </section>
+      </Section>
 
       {idea.reviewNote && (
-        <section className="mt-6 rounded-md bg-neutral-100 dark:bg-neutral-800 p-3">
-          <h2 className="text-sm font-medium">Reviewer note</h2>
-          <p className="text-sm mt-1 whitespace-pre-wrap">{idea.reviewNote}</p>
-        </section>
+        <div className="card">
+          <div className="text-xs text-[color:var(--color-muted)] mb-2">Reviewer note</div>
+          <p className="text-sm whitespace-pre-wrap">{idea.reviewNote}</p>
+        </div>
       )}
 
       {isOwner && submissionsOpen() && (
-        <div className="mt-8">
-          <Link
-            href={`/my-submissions/${idea.id}/edit`}
-            className="rounded-md border border-neutral-300 dark:border-neutral-700 px-4 py-2 text-sm"
-          >
-            Edit
+        <div className="pt-4 border-t border-[color:var(--color-border)]">
+          <Link href={`/my-submissions/${idea.id}/edit`} className="btn btn-ghost">
+            Edit submission
           </Link>
         </div>
       )}
     </article>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <h2 className="text-xs text-[color:var(--color-muted)]">{title}</h2>
+      <div className="text-[color:var(--color-foreground)]">{children}</div>
+    </section>
   );
 }

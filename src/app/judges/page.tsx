@@ -1,6 +1,5 @@
 import { desc, eq } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
-import { StatusBadge } from "@/components/StatusBadge";
 import { verifyJudgeToken } from "@/lib/judge-tokens";
 
 export const dynamic = "force-dynamic";
@@ -15,11 +14,11 @@ export default async function JudgesPage({
 
   if (!judge) {
     return (
-      <div className="max-w-md mx-auto mt-10 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Judges</h1>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-          This page is only accessible via your private link. If you&apos;re a
-          judge and didn&apos;t receive one, contact the organizer.
+      <div className="max-w-md mx-auto mt-16 text-center">
+        <div className="text-5xl mb-4">🔐</div>
+        <h1 className="text-3xl font-bold tracking-tight">Judges only</h1>
+        <p className="mt-3 text-sm text-[color:var(--color-muted)]">
+          This page is accessible only via your private link.
         </p>
       </div>
     );
@@ -32,48 +31,52 @@ export default async function JudgesPage({
     .orderBy(desc(submissions.createdAt));
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Hackathon ideas — judging
-        </h1>
-        <span className="text-xs text-neutral-500">
-          Judge: <strong>{judge.name}</strong>
-        </span>
-      </div>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-        Read-only list of accepted ideas. Scoring is offline.
-      </p>
+    <div className="space-y-8">
+      <header className="flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">
+            <span className="gradient-text">Accepted</span> ideas
+          </h1>
+          <p className="mt-1 text-sm text-[color:var(--color-muted)]">Judge view · read-only</p>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-[color:var(--color-muted)]">Judge</div>
+          <div className="text-sm">{judge.name}</div>
+        </div>
+      </header>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-neutral-500">No accepted ideas yet.</p>
+        <div className="card text-center py-16 text-[color:var(--color-muted)]">
+          No accepted ideas yet.
+        </div>
       ) : (
-        <ol className="mt-6 space-y-4">
+        <ol className="space-y-5">
           {rows.map((s, i) => (
-            <li
-              key={s.id}
-              className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-neutral-500">#{i + 1}</span>
-                <h2 className="font-medium">{s.title}</h2>
-                <StatusBadge status={s.status} />
+            <li key={s.id} className="card">
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <span className="text-xs text-[color:var(--color-muted)] tabular-nums">
+                  #{String(i + 1).padStart(2, "0")}
+                </span>
+                <h2 className="text-2xl font-semibold tracking-tight">{s.title}</h2>
               </div>
-              <section className="mt-3 space-y-1">
-                <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
-                  Idea
-                </h3>
-                <p className="whitespace-pre-wrap text-sm">{s.description}</p>
+              <section className="mt-4 space-y-1">
+                <h3 className="text-xs text-[color:var(--color-muted)]">Idea</h3>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">{s.description}</p>
               </section>
-              <section className="mt-3 space-y-1">
-                <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
-                  Motivation
-                </h3>
-                <p className="whitespace-pre-wrap text-sm">{s.motivation}</p>
+              <section className="mt-4 space-y-1">
+                <h3 className="text-xs text-[color:var(--color-muted)]">Motivation</h3>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">{s.motivation}</p>
               </section>
-              <p className="mt-3 text-xs text-neutral-500">
-                Developers: {s.developers.join(", ")}
-              </p>
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {s.developers.map((d) => (
+                  <span
+                    key={d}
+                    className="pill border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]/70 text-[color:var(--color-foreground)]"
+                  >
+                    {d}
+                  </span>
+                ))}
+              </div>
             </li>
           ))}
         </ol>

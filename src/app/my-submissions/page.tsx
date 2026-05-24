@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { desc, eq } from "drizzle-orm";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { db, submissions } from "@/lib/db";
 import { StatusBadge } from "@/components/StatusBadge";
 import { submissionsOpen, SUBMISSION_DEADLINE, formatInTZ } from "@/lib/dates";
@@ -9,7 +9,7 @@ import { submissionsOpen, SUBMISSION_DEADLINE, formatInTZ } from "@/lib/dates";
 export const dynamic = "force-dynamic";
 
 export default async function MySubmissionsPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.email) redirect("/auth/signin?callbackUrl=/my-submissions");
 
   const rows = await db
@@ -21,54 +21,64 @@ export default async function MySubmissionsPage() {
   const open = submissionsOpen();
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">My submissions</h1>
+    <div className="space-y-8">
+      <header className="flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">My ideas</h1>
+          <p className="mt-2 text-sm text-[color:var(--color-muted)]">
+            {open
+              ? `Editable until ${formatInTZ(SUBMISSION_DEADLINE)}. Edits reset status to pending.`
+              : "Submissions are closed; entries are read-only."}
+          </p>
+        </div>
         {open && (
-          <Link
-            href="/submit"
-            className="rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-3 py-1.5 text-sm"
-          >
-            New
+          <Link href="/submit" className="btn btn-primary">
+            New idea →
           </Link>
         )}
-      </div>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-        {open
-          ? `Editable until ${formatInTZ(SUBMISSION_DEADLINE)}. Any edit resets status to pending.`
-          : "Submissions are closed; entries are read-only."}
-      </p>
+      </header>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-neutral-500">
-          You haven&apos;t submitted any ideas yet.
-        </p>
+        <div className="card text-center py-16">
+          <div className="text-5xl mb-4">💡</div>
+          <p className="text-[color:var(--color-muted)]">
+            You haven&apos;t submitted any ideas yet.
+          </p>
+          {open && (
+            <Link href="/submit" className="btn btn-primary mt-6">
+              Submit your first
+            </Link>
+          )}
+        </div>
       ) : (
-        <ul className="mt-6 space-y-3">
+        <ul className="space-y-3">
           {rows.map((s) => (
-            <li
-              key={s.id}
-              className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4"
-            >
-              <div className="flex items-center gap-3">
-                <Link href={`/ideas/${s.id}`} className="font-medium hover:underline">
+            <li key={s.id} className="card card-hover">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <Link
+                  href={`/ideas/${s.id}`}
+                  className="text-lg font-semibold hover:gradient-text transition"
+                >
                   {s.title}
                 </Link>
                 <StatusBadge status={s.status} />
               </div>
               {s.reviewNote && (
-                <p className="mt-1 text-xs text-neutral-500">
+                <p className="mt-2 text-xs text-[color:var(--color-muted)]">
                   Reviewer note: {s.reviewNote}
                 </p>
               )}
-              <div className="mt-2 flex items-center gap-3 text-sm">
-                <Link href={`/ideas/${s.id}`} className="text-neutral-600 hover:underline">
+              <div className="mt-3 flex items-center gap-4 text-sm">
+                <Link
+                  href={`/ideas/${s.id}`}
+                  className="text-[color:var(--color-muted)] hover:text-[color:var(--color-foreground)]"
+                >
                   View
                 </Link>
                 {open && (
                   <Link
                     href={`/my-submissions/${s.id}/edit`}
-                    className="text-neutral-600 hover:underline"
+                    className="text-[color:var(--color-accent-2)] hover:brightness-110"
                   >
                     Edit
                   </Link>

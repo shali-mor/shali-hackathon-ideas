@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { db, submissions } from "@/lib/db";
 import { submissionsOpen } from "@/lib/dates";
 import { SubmissionForm } from "@/app/submit/SubmissionForm";
@@ -12,7 +12,7 @@ export default async function EditSubmissionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.email) redirect("/auth/signin");
 
   const idea = await db.query.submissions.findFirst({
@@ -30,35 +30,36 @@ export default async function EditSubmissionPage({
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-semibold tracking-tight">Edit submission</h1>
-      <p className="mt-2 text-xs text-neutral-500">
-        Any edit will reset your status to <strong>pending</strong> for re-review.
-      </p>
-
-      <div className="mt-6">
-        <SubmissionForm
-          action={boundUpdate}
-          defaultValues={{
-            title: idea.title,
-            description: idea.description,
-            motivation: idea.motivation,
-            developers: idea.developers,
-            teamContact: idea.teamContact,
-          }}
-          submitLabel="Save changes"
-        />
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold tracking-tight">Tune the pitch</h1>
+        <p className="mt-2 text-xs text-[color:var(--color-muted)]">
+          Edits reset status to{" "}
+          <span className="text-[color:var(--color-warn)]">pending</span> for re-review.
+        </p>
       </div>
+
+      <SubmissionForm
+        action={boundUpdate}
+        defaultValues={{
+          title: idea.title,
+          description: idea.description,
+          motivation: idea.motivation,
+          developers: idea.developers,
+          teamContact: idea.teamContact,
+        }}
+        submitLabel="Save changes"
+      />
 
       <form
         action={async () => {
           "use server";
           await deleteSubmission(id);
         }}
-        className="mt-8 border-t border-neutral-200 dark:border-neutral-800 pt-6"
+        className="mt-12 border-t border-[color:var(--color-border)] pt-6"
       >
         <button
           type="submit"
-          className="text-sm text-rose-700 dark:text-rose-300 hover:underline"
+          className="text-sm text-[color:var(--color-danger)] hover:underline"
         >
           Delete this submission
         </button>

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { db, submissions } from "@/lib/db";
 import { parseSubmissionForm } from "@/lib/submissions";
 import { submissionsOpen } from "@/lib/dates";
@@ -18,7 +18,7 @@ export async function createSubmission(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.email || !isAllowedEmail(session.user.email)) {
     return { ok: false, error: "You must sign in with a Forcepoint email." };
   }
@@ -43,14 +43,14 @@ export async function createSubmission(
       developers: input.developers,
       teamContact: input.teamContact,
       submittedByEmail: session.user.email,
-      submittedByName: session.user.name ?? null,
+      submittedByName: session.user.name,
     })
     .returning({ id: submissions.id });
 
   revalidatePath("/ideas");
   revalidatePath("/my-submissions");
   revalidatePath("/admin");
-  redirect(`/ideas/${row.id}`);
+  return { ok: true, id: row.id };
 }
 
 export async function updateSubmission(
@@ -58,7 +58,7 @@ export async function updateSubmission(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.email) {
     return { ok: false, error: "Not signed in." };
   }
@@ -107,7 +107,7 @@ export async function updateSubmission(
 }
 
 export async function deleteSubmission(id: string): Promise<void> {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.email) throw new Error("Not signed in.");
   if (!submissionsOpen()) {
     throw new Error("Submissions are closed; deletes are locked.");

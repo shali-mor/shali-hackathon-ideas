@@ -1,59 +1,77 @@
-import { signIn, auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+import { signInAction } from "./action";
 
 export default async function SignInPage({
   searchParams,
 }: {
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 }) {
-  const session = await auth();
+  const session = await getSession();
   const params = await searchParams;
   if (session?.user) {
     redirect(params.callbackUrl ?? "/");
   }
 
+  const error =
+    params.error === "AccessDenied"
+      ? "Only @forcepoint.com emails are allowed."
+      : params.error === "BadName"
+      ? "Enter your name (2–80 chars)."
+      : null;
+
   return (
-    <div className="max-w-md mx-auto mt-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-        Use your <strong>@forcepoint.com</strong> email. We&apos;ll send you a
-        magic link.
+    <div className="max-w-md mx-auto mt-12">
+      <h1 className="text-4xl font-bold tracking-tight">
+        Let&apos;s <span className="gradient-text">hack</span>.
+      </h1>
+      <p className="mt-3 text-sm text-[color:var(--color-muted)]">
+        Enter your name and{" "}
+        <span className="text-[color:var(--color-foreground)]">
+          @forcepoint.com
+        </span>{" "}
+        email. No password — we trust you.
       </p>
 
-      {params.error && (
-        <p className="mt-4 rounded-md bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-800 dark:bg-rose-900/30 dark:border-rose-800 dark:text-rose-200">
-          {params.error === "AccessDenied"
-            ? "That email isn't allowed. Only @forcepoint.com addresses can sign in."
-            : "Sign-in failed. Try again."}
-        </p>
+      {error && (
+        <div className="mt-6 rounded-lg border border-[color:var(--color-danger)]/40 bg-[color:var(--color-danger)]/10 px-3.5 py-2.5 text-sm text-[color:var(--color-danger)]">
+          {error}
+        </div>
       )}
 
-      <form
-        className="mt-6 space-y-3"
-        action={async (formData: FormData) => {
-          "use server";
-          const email = String(formData.get("email") ?? "").trim();
-          await signIn("resend", {
-            email,
-            redirectTo: params.callbackUrl ?? "/",
-          });
-        }}
-      >
+      <form action={signInAction} className="mt-8 space-y-3">
+        <input
+          type="hidden"
+          name="callbackUrl"
+          value={params.callbackUrl ?? "/"}
+        />
         <label className="block">
-          <span className="text-sm font-medium">Email</span>
+          <span className="text-sm font-medium">Your name</span>
+          <input
+            name="name"
+            type="text"
+            required
+            minLength={2}
+            maxLength={80}
+            placeholder="Shali Mor"
+            className="input mt-1.5"
+            autoComplete="name"
+          />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium">Forcepoint email</span>
           <input
             name="email"
             type="email"
             required
             placeholder="you@forcepoint.com"
-            className="mt-1 block w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm"
+            pattern=".*@forcepoint\.com$"
+            className="input mt-1.5"
+            autoComplete="email"
           />
         </label>
-        <button
-          type="submit"
-          className="w-full rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white py-2 text-sm font-medium"
-        >
-          Send magic link
+        <button type="submit" className="btn btn-primary w-full">
+          Sign in →
         </button>
       </form>
     </div>

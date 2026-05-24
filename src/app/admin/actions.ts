@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { db, submissions } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import { sendEmail, reviewEmail } from "@/lib/email";
@@ -16,7 +16,7 @@ async function review(
   status: "accepted" | "rejected",
   reviewNote: string | null,
 ) {
-  const session = await auth();
+  const session = await getSession();
   if (!isAdmin(session?.user?.email)) {
     throw new Error("Forbidden");
   }
@@ -64,7 +64,7 @@ export async function rejectSubmission(formData: FormData): Promise<void> {
 }
 
 export async function reopenSubmission(formData: FormData): Promise<void> {
-  const session = await auth();
+  const session = await getSession();
   if (!isAdmin(session?.user?.email)) throw new Error("Forbidden");
   const id = String(formData.get("id") ?? "");
 
@@ -78,6 +78,20 @@ export async function reopenSubmission(formData: FormData): Promise<void> {
       updatedAt: new Date(),
     })
     .where(eq(submissions.id, id));
+
+  revalidatePath("/admin");
+  revalidatePath("/ideas");
+  revalidatePath(`/ideas/${id}`);
+  revalidatePath("/my-submissions");
+}
+
+export async function adminDeleteSubmission(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!isAdmin(session?.user?.email)) throw new Error("Forbidden");
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  await db.delete(submissions).where(eq(submissions.id, id));
 
   revalidatePath("/admin");
   revalidatePath("/ideas");

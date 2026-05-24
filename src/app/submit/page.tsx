@@ -1,11 +1,15 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import { submissionsOpen, SUBMISSION_DEADLINE, formatInTZ } from "@/lib/dates";
+import { getSession } from "@/lib/session";
+import {
+  submissionsOpen,
+  SUBMISSION_DEADLINE,
+  formatInTZ,
+} from "@/lib/dates";
 import { SubmissionForm } from "./SubmissionForm";
 import { createSubmission } from "./actions";
 
 export default async function SubmitPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user) {
     redirect("/auth/signin?callbackUrl=/submit");
   }
@@ -13,20 +17,28 @@ export default async function SubmitPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-semibold tracking-tight">Submit an idea</h1>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-        Deadline: <strong>{formatInTZ(SUBMISSION_DEADLINE)}</strong> (Asia/Jerusalem).
-        After admin review you&apos;ll get an email with the decision.
-      </p>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold tracking-tight">Pitch your idea</h1>
+        <p className="mt-2 text-sm text-[color:var(--color-muted)]">
+          Deadline:{" "}
+          <span className="text-[color:var(--color-foreground)]">
+            {formatInTZ(SUBMISSION_DEADLINE)}
+          </span>{" "}
+          (Asia/Jerusalem).
+        </p>
+      </div>
 
       {!open ? (
-        <div className="mt-6 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-200">
-          Submissions are closed.
+        <div className="card text-center py-12">
+          <div className="text-4xl mb-3">🔒</div>
+          <p className="text-[color:var(--color-muted)]">Submissions are closed.</p>
         </div>
       ) : (
-        <div className="mt-6">
-          <SubmissionForm action={createSubmission} submitLabel="Submit idea" />
-        </div>
+        <SubmissionForm
+          action={createSubmission}
+          submitLabel="Submit idea"
+          celebrate
+        />
       )}
     </div>
   );

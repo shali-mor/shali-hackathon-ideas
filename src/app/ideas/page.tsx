@@ -2,13 +2,13 @@ import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
 import { StatusBadge } from "@/components/StatusBadge";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { isAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function IdeasPage() {
-  const session = await auth();
+  const session = await getSession();
   const admin = isAdmin(session?.user?.email);
 
   const rows = admin
@@ -20,40 +20,67 @@ export default async function IdeasPage() {
         .orderBy(desc(submissions.createdAt));
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold tracking-tight">
-        {admin ? "All submissions" : "Accepted ideas"}
-      </h1>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-        {admin
-          ? "Admin view — all submissions regardless of status."
-          : "Only accepted ideas are shown publicly."}
-      </p>
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-4xl font-bold tracking-tight">
+          {admin ? "All submissions" : "Accepted ideas"}
+        </h1>
+        <p className="mt-2 text-sm text-[color:var(--color-muted)]">
+          {admin
+            ? "Admin view — every submission, every status."
+            : "What teams are building on 2026-06-01."}
+        </p>
+      </header>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-neutral-500">No ideas yet.</p>
+        <EmptyState admin={admin} />
       ) : (
-        <ul className="mt-6 space-y-3">
+        <ul className="grid md:grid-cols-2 gap-4">
           {rows.map((s) => (
-            <li
-              key={s.id}
-              className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 hover:border-neutral-400 dark:hover:border-neutral-600"
-            >
-              <Link href={`/ideas/${s.id}`} className="block">
-                <div className="flex items-center gap-3">
-                  <h2 className="font-medium">{s.title}</h2>
+            <li key={s.id}>
+              <Link href={`/ideas/${s.id}`} className="card card-hover block h-full">
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-lg font-semibold leading-tight">{s.title}</h2>
                   <StatusBadge status={s.status} />
                 </div>
-                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
+                <p className="mt-3 text-sm text-[color:var(--color-muted)] line-clamp-3">
                   {s.description}
                 </p>
-                <p className="mt-2 text-xs text-neutral-500">
-                  by {s.developers.join(", ")}
-                </p>
+                <div className="mt-4 flex items-center gap-2 flex-wrap">
+                  {s.developers.slice(0, 4).map((d) => (
+                    <span
+                      key={d}
+                      className="pill border border-[color:var(--color-border)] text-[color:var(--color-muted)] bg-[color:var(--color-surface-2)]/70"
+                    >
+                      {d}
+                    </span>
+                  ))}
+                  {s.developers.length > 4 && (
+                    <span className="text-xs text-[color:var(--color-muted)]">
+                      +{s.developers.length - 4}
+                    </span>
+                  )}
+                </div>
               </Link>
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+function EmptyState({ admin }: { admin: boolean }) {
+  return (
+    <div className="card text-center py-16">
+      <div className="text-5xl mb-4">🚀</div>
+      <p className="text-[color:var(--color-muted)]">
+        {admin ? "No submissions yet." : "No accepted ideas yet — check back soon."}
+      </p>
+      {!admin && (
+        <Link href="/submit" className="btn btn-primary mt-6">
+          Submit the first one
+        </Link>
       )}
     </div>
   );
