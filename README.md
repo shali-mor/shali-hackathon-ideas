@@ -1,14 +1,14 @@
 # Forcepoint Hackathon — submit your idea
 
-A small Next.js site for collecting and reviewing ideas for the Forcepoint hackathon on **2026-06-01**.
+A small Next.js site for collecting and reviewing ideas for the Forcepoint hackathon on **2026-06-09**.
 
 🚀 Live: **https://shali-hackathon-ideas.vercel.app**
 
 | | |
 |---|---|
-| Submit deadline | **2026-05-27 23:59 Asia/Jerusalem** |
-| Hack day | **2026-06-01** |
-| Judging | **2026-06-02** (external judges) |
+| Submit deadline | **2026-06-04 23:59 Asia/Jerusalem** |
+| Hack day | **2026-06-09** |
+| Judging | **2026-06-10** (external judges) |
 
 ## How it works
 
@@ -119,7 +119,7 @@ Judges don't sign in. You email them a signed URL.
 npm run mint-judge -- "Jane Doe" jane@external.com
 ```
 
-This prints a URL like `https://shali-hackathon-ideas.vercel.app/judges?token=…`. The token is HS256-signed and valid through 2026-06-10. Anyone with the URL can read accepted ideas on the read-only judge board, so keep it private.
+This prints a URL like `https://shali-hackathon-ideas.vercel.app/judges?token=…`. The token is HS256-signed and valid through 2026-06-18. Anyone with the URL can read accepted ideas on the read-only judge board, so keep it private.
 
 ## Admin
 

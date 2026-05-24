@@ -28,7 +28,7 @@ export default async function IdeasPage() {
         <p className="mt-2 text-sm text-[color:var(--color-muted)]">
           {admin
             ? "Admin view — every submission, every status."
-            : "What teams are building on 2026-06-01."}
+            : "What teams are building on 2026-06-09."}
         </p>
       </header>
 

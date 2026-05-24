@@ -24,7 +24,7 @@ export default async function Home() {
         <div className="flex items-center gap-2 mb-6">
           <span className="dot-live" />
           <span className="text-xs text-[color:var(--color-muted)]">
-            Live · 2026-06-01
+            Live · 2026-06-09
           </span>
         </div>
 

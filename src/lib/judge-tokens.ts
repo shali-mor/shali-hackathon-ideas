@@ -22,7 +22,7 @@ export async function mintJudgeToken(payload: JudgePayload): Promise<string> {
     .setIssuer(ISSUER)
     .setAudience(AUDIENCE)
     .setIssuedAt()
-    .setExpirationTime("2026-06-10T00:00:00Z")
+    .setExpirationTime("2026-06-18T00:00:00Z")
     .sign(getSecret());
 }
 

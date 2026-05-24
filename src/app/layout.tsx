@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Forcepoint Hackathon — submit your idea",
   description:
-    "One-day Forcepoint hackathon. Pitch your idea, get accepted, ship it on 2026-06-01.",
+    "One-day Forcepoint hackathon. Pitch your idea, get accepted, ship it on 2026-06-09.",
 };
 
 export default async function RootLayout({
@@ -94,7 +94,7 @@ export default async function RootLayout({
 
         <footer className="border-t border-[color:var(--color-border)] py-6 text-center text-xs text-[color:var(--color-muted)]">
           <span className="dot-live mr-2 align-middle" />
-          Hackathon · 2026-06-01 · judging 2026-06-02
+          Hackathon · 2026-06-09 · judging 2026-06-10
         </footer>
       </body>
     </html>
