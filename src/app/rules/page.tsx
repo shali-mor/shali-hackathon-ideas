@@ -6,36 +6,42 @@ export const metadata = {
   description: "The few rules that apply to the 2026-06-09 Forcepoint hackathon.",
 };
 
-const RULES: { n: number; title: string; body: string }[] = [
-  {
-    n: 1,
-    title: "Teams of up to 3",
-    body: "Maximum three developers per team. Smaller is fine — even solo is fine.",
-  },
-  {
-    n: 2,
-    title: "In the office, full day",
-    body: "Show up. The whole point is hacking together on the day, in person.",
-  },
-  {
-    n: 3,
-    title: "SDLC-only — no customer features",
-    body: "Ideas must improve our velocity, productivity, or quality. Product- or project-related is fine; customer-facing features are out of scope for this hackathon.",
-  },
-  {
-    n: 4,
-    title: "External judges",
-    body: "Judges come from outside Forcepoint. They review accepted ideas only.",
-  },
-  {
-    n: 5,
-    title: "Judging is the day after",
-    body: "Demos and judging happen on 2026-06-10 — the day after the hackathon.",
-  },
-];
-
 export default function RulesPage() {
   const open = submissionsOpen();
+
+  const rules: { n: number; title: string; body: string }[] = [
+    {
+      n: 1,
+      title: "Submit before the deadline",
+      body: `Submissions close ${formatInTZ(SUBMISSION_DEADLINE)} Asia/Jerusalem. After that, the form locks — no new entries, no edits.`,
+    },
+    {
+      n: 2,
+      title: "Teams of up to 3",
+      body: "Maximum three developers per team. Smaller is fine — even solo is fine.",
+    },
+    {
+      n: 3,
+      title: "In the office, full day",
+      body: "Show up. The whole point is hacking together on the day, in person.",
+    },
+    {
+      n: 4,
+      title: "SDLC-only — no customer features",
+      body: "Ideas must improve our velocity, productivity, or quality. Product- or project-related is fine; customer-facing features are out of scope for this hackathon.",
+    },
+    {
+      n: 5,
+      title: "External judges",
+      body: "Judges come from outside Forcepoint. They review accepted ideas only.",
+    },
+    {
+      n: 6,
+      title: "Judging is the day after",
+      body: "Demos and judging happen on 2026-06-10 — the day after the hackathon.",
+    },
+  ];
+
   return (
     <div className="max-w-3xl mx-auto">
       <header className="mb-10">
@@ -46,7 +52,7 @@ export default function RulesPage() {
       </header>
 
       <ol className="space-y-4">
-        {RULES.map((r) => (
+        {rules.map((r) => (
           <li key={r.n} className="card">
             <div className="flex items-start gap-4">
               <span className="text-2xl font-semibold text-[color:var(--color-accent)] tabular-nums leading-none mt-0.5">
@@ -77,10 +83,6 @@ export default function RulesPage() {
           See ideas
         </Link>
       </div>
-
-      <p className="mt-6 text-xs text-[color:var(--color-muted)]">
-        Submission deadline: {formatInTZ(SUBMISSION_DEADLINE)} Asia/Jerusalem.
-      </p>
     </div>
   );
 }

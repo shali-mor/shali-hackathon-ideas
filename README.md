@@ -12,11 +12,12 @@ A small Next.js site for collecting and reviewing ideas for the Forcepoint hacka
 
 ## Rules
 
-1. **Teams of up to 3.** Maximum three developers per team. Smaller is fine.
-2. **In the office, full day.** Hacking happens in person.
-3. **SDLC ideas only.** Improve velocity, productivity, or quality. Product- or project-related is fine; customer-facing features are out of scope.
-4. **External judges.** Judges come from outside Forcepoint.
-5. **Judging is the day after.** Demos and judging are on 2026-06-10.
+1. **Submit before the deadline.** Submissions close 2026-06-04 23:59 Asia/Jerusalem. After that, no new entries, no edits.
+2. **Teams of up to 3.** Maximum three developers per team. Smaller is fine.
+3. **In the office, full day.** Hacking happens in person.
+4. **SDLC ideas only.** Improve velocity, productivity, or quality. Product- or project-related is fine; customer-facing features are out of scope.
+5. **External judges.** Judges come from outside Forcepoint.
+6. **Judging is the day after.** Demos and judging are on 2026-06-10.
 
 ## How it works
 
