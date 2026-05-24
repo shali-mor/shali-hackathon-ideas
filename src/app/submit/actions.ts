@@ -2,12 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte, count } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db, submissions } from "@/lib/db";
 import { parseSubmissionForm } from "@/lib/submissions";
 import { submissionsOpen } from "@/lib/dates";
 import { isAllowedEmail } from "@/lib/admin";
+
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const RATE_LIMIT_MAX = 5; // max submissions per window per email
 
 export type ActionState =
   | { ok: false; error: string }
@@ -24,6 +27,24 @@ export async function createSubmission(
   }
   if (!submissionsOpen()) {
     return { ok: false, error: "Submissions are closed." };
+  }
+
+  // Per-email rate limit: max N submissions in the last window
+  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+  const [{ recent } = { recent: 0 }] = await db
+    .select({ recent: count() })
+    .from(submissions)
+    .where(
+      and(
+        eq(submissions.submittedByEmail, session.user.email),
+        gte(submissions.createdAt, windowStart),
+      ),
+    );
+  if (recent >= RATE_LIMIT_MAX) {
+    return {
+      ok: false,
+      error: `You've submitted ${recent} ideas in the last 10 minutes. Slow down — try again shortly.`,
+    };
   }
 
   let input;

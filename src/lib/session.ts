@@ -35,7 +35,9 @@ export async function getSession(): Promise<Session | null> {
   const token = c.get(COOKIE)?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtVerify(token, getSecret(), {
+      algorithms: [ALG],
+    });
     if (typeof payload.email !== "string" || typeof payload.name !== "string") {
       return null;
     }

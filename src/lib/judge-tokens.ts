@@ -31,6 +31,7 @@ export async function verifyJudgeToken(
 ): Promise<JudgePayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret(), {
+      algorithms: ["HS256"],
       issuer: ISSUER,
       audience: AUDIENCE,
     });
