@@ -5,6 +5,7 @@ import {
   uuid,
   primaryKey,
   integer,
+  boolean,
   pgEnum,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
@@ -21,6 +22,7 @@ export const submissions = pgTable("submissions", {
   description: text("description").notNull(),
   motivation: text("motivation").notNull(),
   developers: text("developers").array().notNull(),
+  teamNeeded: boolean("team_needed").notNull().default(false),
   teamContact: text("team_contact").notNull(),
   submittedByEmail: text("submitted_by_email").notNull(),
   submittedByName: text("submitted_by_name"),

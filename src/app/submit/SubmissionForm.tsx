@@ -19,6 +19,7 @@ type Props = {
     description?: string;
     motivation?: string;
     developers?: string[];
+    teamNeeded?: boolean;
     teamContact?: string;
   };
   submitLabel?: string;
@@ -30,6 +31,7 @@ type Data = {
   description: string;
   motivation: string;
   developers: string[];
+  teamNeeded: boolean;
   teamContact: string;
 };
 
@@ -39,8 +41,8 @@ const STEPS: { id: StepId; label: string; question: string; hint: string }[] = [
   { id: "title",      label: "Title",       question: "What are you calling it?",   hint: "Short and catchy. Max 80 characters." },
   { id: "idea",       label: "Idea",        question: "Describe the idea.",         hint: "What you'd build, how it works, what the demo looks like." },
   { id: "motivation", label: "Motivation",  question: "Why does it matter?",        hint: "Problem solved, who benefits, why this is worth a day." },
-  { id: "team",       label: "Team",        question: "Who's on the team?",         hint: "1–3 developers. Press Enter to add each." },
-  { id: "contact",    label: "Contact",     question: "Best way to reach the team lead?", hint: "Slack handle or email." },
+  { id: "team",       label: "Team",        question: "Who's on the team?",         hint: "Up to 3 developers — or mark as 'team needed' so others can join later." },
+  { id: "contact",    label: "Contact",     question: "Best way to reach the submitter?", hint: "Slack handle or email." },
   { id: "review",     label: "Review",      question: "Review and submit.",         hint: "Check your answers before sending." },
 ];
 
@@ -57,6 +59,7 @@ export function SubmissionForm({
     description: defaultValues?.description ?? "",
     motivation: defaultValues?.motivation ?? "",
     developers: defaultValues?.developers ?? [],
+    teamNeeded: defaultValues?.teamNeeded ?? false,
     teamContact: defaultValues?.teamContact ?? "",
   });
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -83,7 +86,8 @@ export function SubmissionForm({
         if (data.motivation.length > 1000) return "Max 1000 characters.";
         return null;
       case "team":
-        if (data.developers.length === 0) return "Add at least one developer.";
+        if (!data.teamNeeded && data.developers.length === 0)
+          return "Add at least one developer, or mark this idea as needing a team.";
         if (data.developers.length > 3) return "Up to 3 developers.";
         return null;
       case "contact":
@@ -150,6 +154,7 @@ export function SubmissionForm({
         <input type="hidden" name="description" value={data.description} />
         <input type="hidden" name="motivation" value={data.motivation} />
         <input type="hidden" name="developers" value={data.developers.join("\n")} />
+        <input type="hidden" name="teamNeeded" value={data.teamNeeded ? "true" : "false"} />
         <input type="hidden" name="teamContact" value={data.teamContact} />
 
         <AnimatePresence mode="wait">
@@ -330,11 +335,35 @@ function StepInput({
   }
   if (step === "team") {
     return (
-      <ChipInput
-        values={data.developers}
-        onChange={(developers) => setData({ ...data, developers })}
-        onSubmitChip={onAdvance}
-      />
+      <div className="space-y-4">
+        <ChipInput
+          values={data.developers}
+          onChange={(developers) => setData({ ...data, developers })}
+          onSubmitChip={onAdvance}
+          disabled={data.teamNeeded}
+        />
+        <label className="flex items-start gap-3 rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/70 px-3 py-3 cursor-pointer hover:border-[color:var(--color-accent-2)]/60 transition">
+          <input
+            type="checkbox"
+            checked={data.teamNeeded}
+            onChange={(e) =>
+              setData({
+                ...data,
+                teamNeeded: e.target.checked,
+                developers: e.target.checked ? [] : data.developers,
+              })
+            }
+            className="mt-0.5 h-4 w-4 accent-[color:var(--color-accent-2)]"
+          />
+          <span className="text-sm">
+            <span className="font-medium">Looking for a team — devs can join later</span>
+            <span className="block text-xs text-[color:var(--color-muted)] mt-0.5">
+              Submit just the idea. You&apos;ll be listed as the submitter, and the idea
+              will be marked <em>Team needed</em> so others can pick it up.
+            </span>
+          </span>
+        </label>
+      </div>
     );
   }
   if (step === "contact") {
@@ -422,14 +451,18 @@ function ChipInput({
   values,
   onChange,
   onSubmitChip,
+  disabled = false,
 }: {
   values: string[];
   onChange: (v: string[]) => void;
   onSubmitChip: () => void;
+  disabled?: boolean;
 }) {
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => inputRef.current?.focus(), []);
+  useEffect(() => {
+    if (!disabled) inputRef.current?.focus();
+  }, [disabled]);
 
   function add(raw: string) {
     const cleaned = raw.trim();
@@ -456,8 +489,10 @@ function ChipInput({
     }
   }
 
+  const inputDisabled = disabled || values.length >= 3;
+
   return (
-    <div>
+    <div className={disabled ? "opacity-50 pointer-events-none" : ""}>
       <div className="rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/70 px-2 py-1.5 flex flex-wrap gap-1.5 min-h-[44px] focus-within:border-[color:var(--color-accent-2)]/60 transition">
         <AnimatePresence initial={false}>
           {values.map((v) => (
@@ -489,13 +524,15 @@ function ChipInput({
           onKeyDown={onKey}
           onBlur={() => input.trim() && add(input)}
           placeholder={
-            values.length === 0
+            disabled
+              ? "Team will be assembled later"
+              : values.length === 0
               ? "Type a name and press Enter"
               : values.length < 3
               ? "Add another"
               : ""
           }
-          disabled={values.length >= 3}
+          disabled={inputDisabled}
           className="flex-1 min-w-[140px] bg-transparent px-1.5 py-0.5 text-sm outline-none disabled:cursor-not-allowed"
         />
       </div>
@@ -508,12 +545,17 @@ function ChipInput({
 }
 
 function Review({ data }: { data: Data }) {
+  const devs = data.teamNeeded
+    ? data.developers.length > 0
+      ? `${data.developers.join(", ")} — open to more (team needed)`
+      : "Team needed — open to anyone joining"
+    : data.developers.join(", ");
   return (
     <dl className="divide-y divide-[color:var(--color-border)] rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/70">
       <Row k="Title" v={data.title} />
       <Row k="Idea" v={data.description} multi />
       <Row k="Motivation" v={data.motivation} multi />
-      <Row k="Developers" v={data.developers.join(", ")} />
+      <Row k="Developers" v={devs} />
       <Row k="Contact" v={data.teamContact} />
     </dl>
   );

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { desc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db, submissions } from "@/lib/db";
-import { StatusBadge } from "@/components/StatusBadge";
+import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
 import { submissionsOpen, SUBMISSION_DEADLINE, formatInTZ } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +61,10 @@ export default async function MySubmissionsPage() {
                 >
                   {s.title}
                 </Link>
-                <StatusBadge status={s.status} />
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  {s.teamNeeded && <TeamNeededBadge />}
+                  <StatusBadge status={s.status} />
+                </div>
               </div>
               {s.reviewNote && (
                 <p className="mt-2 text-xs text-[color:var(--color-muted)]">

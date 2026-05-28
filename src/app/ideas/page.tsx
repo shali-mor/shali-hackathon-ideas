@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
-import { StatusBadge } from "@/components/StatusBadge";
+import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
 import { getSession } from "@/lib/session";
 import { isAdmin } from "@/lib/admin";
 
@@ -41,8 +41,14 @@ export default async function IdeasPage() {
               <Link href={`/ideas/${s.id}`} className="card card-hover block h-full">
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="text-lg font-semibold leading-tight">{s.title}</h2>
-                  <StatusBadge status={s.status} />
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {s.teamNeeded && <TeamNeededBadge />}
+                    <StatusBadge status={s.status} />
+                  </div>
                 </div>
+                <p className="mt-1 text-xs text-[color:var(--color-muted)]">
+                  Submitted by {s.submittedByName ?? s.submittedByEmail}
+                </p>
                 <p className="mt-3 text-sm text-[color:var(--color-muted)] line-clamp-3">
                   {s.description}
                 </p>
@@ -58,6 +64,11 @@ export default async function IdeasPage() {
                   {s.developers.length > 4 && (
                     <span className="text-xs text-[color:var(--color-muted)]">
                       +{s.developers.length - 4}
+                    </span>
+                  )}
+                  {s.teamNeeded && s.developers.length === 0 && (
+                    <span className="text-xs text-[color:var(--color-muted)] italic">
+                      No team yet — devs can join later
                     </span>
                   )}
                 </div>

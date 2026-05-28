@@ -22,3 +22,14 @@ export function StatusBadge({ status }: { status: Status }) {
     <span className={clsx("pill border", STYLES[status])}>{LABEL[status]}</span>
   );
 }
+
+export function TeamNeededBadge() {
+  return (
+    <span
+      className="pill border bg-[color:var(--color-accent-2)]/15 text-[color:var(--color-accent-2)] border-[color:var(--color-accent-2)]/40"
+      title="Devs can join this idea — reach out to the submitter."
+    >
+      ＋ team needed
+    </span>
+  );
+}

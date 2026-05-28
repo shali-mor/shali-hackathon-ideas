@@ -1,0 +1,1 @@
+ALTER TABLE "submissions" ADD COLUMN "team_needed" boolean DEFAULT false NOT NULL;

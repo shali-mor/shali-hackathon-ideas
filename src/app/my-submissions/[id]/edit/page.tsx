@@ -45,6 +45,7 @@ export default async function EditSubmissionPage({
           description: idea.description,
           motivation: idea.motivation,
           developers: idea.developers,
+          teamNeeded: idea.teamNeeded,
           teamContact: idea.teamContact,
         }}
         submitLabel="Save changes"

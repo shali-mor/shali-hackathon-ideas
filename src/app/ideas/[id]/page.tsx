@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { StatusBadge } from "@/components/StatusBadge";
+import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
 import { isAdmin } from "@/lib/admin";
 import { submissionsOpen } from "@/lib/dates";
 
@@ -45,8 +45,9 @@ export default async function IdeaDetailPage({
       <header className="space-y-3">
         <div className="flex items-center gap-3 flex-wrap">
           <StatusBadge status={idea.status} />
+          {idea.teamNeeded && <TeamNeededBadge />}
           <span className="text-xs text-[color:var(--color-muted)]">
-            by {idea.submittedByName ?? idea.submittedByEmail}
+            submitted by {idea.submittedByName ?? idea.submittedByEmail}
           </span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
@@ -63,7 +64,7 @@ export default async function IdeaDetailPage({
       </Section>
 
       <Section title="Developers">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           {idea.developers.map((d) => (
             <span
               key={d}
@@ -72,10 +73,22 @@ export default async function IdeaDetailPage({
               {d}
             </span>
           ))}
+          {idea.developers.length === 0 && (
+            <span className="text-sm text-[color:var(--color-muted)] italic">
+              No developers yet.
+            </span>
+          )}
         </div>
+        {idea.teamNeeded && (
+          <p className="mt-3 text-sm text-[color:var(--color-muted)]">
+            This idea is <span className="text-[color:var(--color-accent-2)]">open
+            for developers to join</span>. Reach out to the submitter via the
+            contact below.
+          </p>
+        )}
       </Section>
 
-      <Section title="Team contact">
+      <Section title={idea.teamNeeded ? "Submitter / contact" : "Team contact"}>
         <p className="text-sm">{idea.teamContact}</p>
       </Section>
 

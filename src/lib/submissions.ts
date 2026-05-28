@@ -30,28 +30,33 @@ function cleanText(s: string): string {
   return stripCtrl(s.replace(/\r\n?/g, "\n"), true).trim();
 }
 
-export const submissionSchema = z.object({
-  title: z
-    .string()
-    .transform(cleanLine)
-    .pipe(z.string().min(3, "Title is required").max(80)),
-  description: z
-    .string()
-    .transform(cleanText)
-    .pipe(z.string().min(20, "Describe the idea in at least 20 chars").max(2000)),
-  motivation: z
-    .string()
-    .transform(cleanText)
-    .pipe(z.string().min(10, "Add some motivation (10+ chars)").max(1000)),
-  developers: z
-    .array(z.string().transform(cleanLine).pipe(z.string().min(1).max(80)))
-    .min(1, "At least one developer")
-    .max(3, "Up to 3 developers"),
-  teamContact: z
-    .string()
-    .transform(cleanLine)
-    .pipe(z.string().min(3).max(120)),
-});
+export const submissionSchema = z
+  .object({
+    title: z
+      .string()
+      .transform(cleanLine)
+      .pipe(z.string().min(3, "Title is required").max(80)),
+    description: z
+      .string()
+      .transform(cleanText)
+      .pipe(z.string().min(20, "Describe the idea in at least 20 chars").max(2000)),
+    motivation: z
+      .string()
+      .transform(cleanText)
+      .pipe(z.string().min(10, "Add some motivation (10+ chars)").max(1000)),
+    developers: z
+      .array(z.string().transform(cleanLine).pipe(z.string().min(1).max(80)))
+      .max(3, "Up to 3 developers"),
+    teamNeeded: z.boolean(),
+    teamContact: z
+      .string()
+      .transform(cleanLine)
+      .pipe(z.string().min(3).max(120)),
+  })
+  .refine((d) => d.teamNeeded || d.developers.length >= 1, {
+    message: "Add at least one developer, or mark this idea as needing a team.",
+    path: ["developers"],
+  });
 
 export type SubmissionInput = z.infer<typeof submissionSchema>;
 
@@ -69,6 +74,7 @@ export function parseSubmissionForm(formData: FormData): SubmissionInput {
     description: formData.get("description") ?? "",
     motivation: formData.get("motivation") ?? "",
     developers: parseDevelopers(formData.get("developers")),
+    teamNeeded: formData.get("teamNeeded") === "true",
     teamContact: formData.get("teamContact") ?? "",
   });
 }

@@ -62,6 +62,7 @@ export async function createSubmission(
       description: input.description,
       motivation: input.motivation,
       developers: input.developers,
+      teamNeeded: input.teamNeeded,
       teamContact: input.teamContact,
       submittedByEmail: session.user.email,
       submittedByName: session.user.name,
@@ -110,6 +111,7 @@ export async function updateSubmission(
       description: input.description,
       motivation: input.motivation,
       developers: input.developers,
+      teamNeeded: input.teamNeeded,
       teamContact: input.teamContact,
       // any edit reverts review state
       status: "pending",
