@@ -129,6 +129,56 @@ export async function updateSubmission(
   redirect(`/ideas/${id}`);
 }
 
+export async function joinTeam(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const session = await getSession();
+  if (!session?.user?.email || !isAllowedEmail(session.user.email)) {
+    return { ok: false, error: "Sign in with a Forcepoint email to join." };
+  }
+  if (!submissionsOpen()) {
+    return { ok: false, error: "Submissions are closed." };
+  }
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { ok: false, error: "Missing idea id." };
+
+  const idea = await db.query.submissions.findFirst({
+    where: eq(submissions.id, id),
+  });
+  if (!idea) return { ok: false, error: "Idea not found." };
+  if (!idea.teamNeeded) {
+    return { ok: false, error: "This idea isn't looking for more devs." };
+  }
+  if (idea.developers.length >= 3) {
+    return { ok: false, error: "Team is full." };
+  }
+
+  const me = (session.user.name?.trim() || session.user.email).slice(0, 80);
+  if (idea.developers.some((d) => d.toLowerCase() === me.toLowerCase())) {
+    return { ok: false, error: "You're already on this team." };
+  }
+
+  const nextDevs = [...idea.developers, me];
+  const teamFull = nextDevs.length >= 3;
+
+  await db
+    .update(submissions)
+    .set({
+      developers: nextDevs,
+      teamNeeded: !teamFull,
+      updatedAt: new Date(),
+    })
+    .where(eq(submissions.id, id));
+
+  revalidatePath("/ideas");
+  revalidatePath(`/ideas/${id}`);
+  revalidatePath("/my-submissions");
+  revalidatePath("/admin");
+  return { ok: true, id };
+}
+
 export async function deleteSubmission(id: string): Promise<void> {
   const session = await getSession();
   if (!session?.user?.email) throw new Error("Not signed in.");

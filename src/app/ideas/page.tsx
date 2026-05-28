@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
+import { desc, or, eq, and, ne } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
 import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
 import { getSession } from "@/lib/session";
@@ -16,7 +16,12 @@ export default async function IdeasPage() {
     : await db
         .select()
         .from(submissions)
-        .where(eq(submissions.status, "accepted"))
+        .where(
+          or(
+            eq(submissions.status, "accepted"),
+            and(eq(submissions.teamNeeded, true), ne(submissions.status, "rejected")),
+          ),
+        )
         .orderBy(desc(submissions.createdAt));
 
   return (
@@ -66,9 +71,13 @@ export default async function IdeasPage() {
                       +{s.developers.length - 4}
                     </span>
                   )}
-                  {s.teamNeeded && s.developers.length === 0 && (
-                    <span className="text-xs text-[color:var(--color-muted)] italic">
-                      No team yet — devs can join later
+                  {s.teamNeeded && (
+                    <span className="text-xs text-[color:var(--color-accent-2)] italic">
+                      {s.developers.length === 0
+                        ? "No team yet — add yourself"
+                        : `${3 - s.developers.length} spot${
+                            3 - s.developers.length === 1 ? "" : "s"
+                          } open`}
                     </span>
                   )}
                 </div>

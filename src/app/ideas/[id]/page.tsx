@@ -6,6 +6,7 @@ import { getSession } from "@/lib/session";
 import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
 import { isAdmin } from "@/lib/admin";
 import { submissionsOpen } from "@/lib/dates";
+import { JoinTeamButton } from "./JoinTeamButton";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,11 @@ export default async function IdeaDetailPage({
 
   const isOwner =
     session?.user?.email?.toLowerCase() === idea.submittedByEmail.toLowerCase();
-  const canView = admin || isOwner || idea.status === "accepted";
+  const canView =
+    admin ||
+    isOwner ||
+    idea.status === "accepted" ||
+    (idea.teamNeeded && idea.status !== "rejected");
 
   if (!canView) {
     return (
@@ -78,18 +83,62 @@ export default async function IdeaDetailPage({
               No developers yet.
             </span>
           )}
+          <span className="ml-auto text-xs text-[color:var(--color-muted)] tabular-nums">
+            {idea.developers.length} / 3
+          </span>
         </div>
-        {idea.teamNeeded && (
-          <p className="mt-3 text-sm text-[color:var(--color-muted)]">
-            This idea is <span className="text-[color:var(--color-accent-2)]">open
-            for developers to join</span>. Reach out to the submitter via the
-            contact below.
-          </p>
+        {idea.teamNeeded && submissionsOpen() && (
+          <>
+            <p className="mt-3 text-sm text-[color:var(--color-muted)]">
+              <span className="text-[color:var(--color-accent-2)]">
+                Open to anyone — add yourself to claim a spot.
+              </span>{" "}
+              No need to ask the submitter; the submitter isn&apos;t
+              necessarily part of the team.
+            </p>
+            {session?.user ? (
+              <JoinTeamButton
+                id={idea.id}
+                disabled={
+                  idea.developers.length >= 3 ||
+                  idea.developers.some(
+                    (d) =>
+                      d.toLowerCase() ===
+                      (session.user?.name?.trim() || session.user?.email || "")
+                        .toLowerCase(),
+                  )
+                }
+              />
+            ) : (
+              <Link
+                href={`/auth/signin?callbackUrl=/ideas/${idea.id}`}
+                className="btn btn-primary mt-3"
+              >
+                Sign in to join
+              </Link>
+            )}
+          </>
         )}
       </Section>
 
-      <Section title={idea.teamNeeded ? "Submitter / contact" : "Team contact"}>
-        <p className="text-sm">{idea.teamContact}</p>
+      <Section title={idea.teamNeeded ? "Submitter" : "Team contact"}>
+        <p className="text-sm">
+          {idea.teamNeeded ? (
+            <>
+              Idea submitted by{" "}
+              <span className="text-[color:var(--color-foreground)]">
+                {idea.submittedByName ?? idea.submittedByEmail}
+              </span>
+              . Reach them at{" "}
+              <span className="text-[color:var(--color-foreground)]">
+                {idea.teamContact}
+              </span>{" "}
+              for questions, but you don&apos;t need permission to join.
+            </>
+          ) : (
+            idea.teamContact
+          )}
+        </p>
       </Section>
 
       {idea.reviewNote && (
