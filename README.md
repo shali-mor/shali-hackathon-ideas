@@ -8,7 +8,7 @@ A small Next.js site for collecting and reviewing ideas for the Forcepoint hacka
 |---|---|
 | Submit deadline | **2026-06-04 23:59 Asia/Jerusalem** |
 | Hack day | **2026-06-09** |
-| Judging | **2026-06-10** (external judges) |
+| Judging | **2026-06-11** (external judges) |
 
 ## Rules
 
@@ -17,7 +17,7 @@ A small Next.js site for collecting and reviewing ideas for the Forcepoint hacka
 3. **In the office, full day.** Hacking happens in person.
 4. **SDLC ideas only.** Improve velocity, productivity, or quality. Product- or project-related is fine; customer-facing features are out of scope.
 5. **External judges.** Judges come from outside Forcepoint.
-6. **Judging is the day after.** Demos and judging are on 2026-06-10.
+6. **Judging is two days after.** Demos and judging are on Thursday 2026-06-11.
 
 ## How it works
 

@@ -30,12 +30,34 @@ function cleanText(s: string): string {
   return stripCtrl(s.replace(/\r\n?/g, "\n"), true).trim();
 }
 
+// SDLC lifecycle stages. Keep in sync with the submission_category pg enum.
+export const CATEGORY_VALUES = [
+  "planning",
+  "design",
+  "development",
+  "testing",
+  "deployment",
+  "maintenance",
+  "other",
+] as const;
+
+export type SubmissionCategory = (typeof CATEGORY_VALUES)[number];
+
 export const submissionSchema = z
   .object({
     title: z
       .string()
       .transform(cleanLine)
       .pipe(z.string().min(3, "Title is required").max(80)),
+    category: z.enum(CATEGORY_VALUES, {
+      message: "Pick the SDLC stage your idea targets.",
+    }),
+    categoryOther: z
+      .string()
+      .transform(cleanLine)
+      .pipe(z.string().max(60))
+      .optional()
+      .default(""),
     description: z
       .string()
       .transform(cleanText)
@@ -56,6 +78,10 @@ export const submissionSchema = z
   .refine((d) => d.teamNeeded || d.developers.length >= 1, {
     message: "Add at least one developer, or mark this idea as needing a team.",
     path: ["developers"],
+  })
+  .refine((d) => d.category !== "other" || d.categoryOther.trim().length >= 2, {
+    message: "Name the stage/area for “Other” (2+ chars).",
+    path: ["categoryOther"],
   });
 
 export type SubmissionInput = z.infer<typeof submissionSchema>;
@@ -71,6 +97,8 @@ export function parseDevelopers(raw: FormDataEntryValue | null): string[] {
 export function parseSubmissionForm(formData: FormData): SubmissionInput {
   return submissionSchema.parse({
     title: formData.get("title") ?? "",
+    category: formData.get("category") ?? "",
+    categoryOther: formData.get("categoryOther") ?? "",
     description: formData.get("description") ?? "",
     motivation: formData.get("motivation") ?? "",
     developers: parseDevelopers(formData.get("developers")),

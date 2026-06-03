@@ -11,13 +11,20 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import type { ActionState } from "./actions";
+import { CATEGORY_ORDER, CATEGORY_META, categoryDisplay } from "@/lib/insights";
+import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
+import type { SubmissionCategory } from "@/lib/submissions";
 
 type Props = {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
+  /** Name/email shown in the "submitted by" line of the live preview. */
+  submitter?: string;
   defaultValues?: {
     title?: string;
     description?: string;
     motivation?: string;
+    category?: SubmissionCategory;
+    categoryOther?: string;
     developers?: string[];
     teamNeeded?: boolean;
     teamContact?: string;
@@ -30,17 +37,27 @@ type Data = {
   title: string;
   description: string;
   motivation: string;
+  category: SubmissionCategory | "";
+  categoryOther: string;
   developers: string[];
   teamNeeded: boolean;
   teamContact: string;
 };
 
-type StepId = "title" | "idea" | "motivation" | "team" | "contact" | "review";
+type StepId =
+  | "title"
+  | "idea"
+  | "motivation"
+  | "category"
+  | "team"
+  | "contact"
+  | "review";
 
 const STEPS: { id: StepId; label: string; question: string; hint: string }[] = [
   { id: "title",      label: "Title",       question: "What are you calling it?",   hint: "Short and catchy. Max 80 characters." },
   { id: "idea",       label: "Idea",        question: "Describe the idea.",         hint: "What you'd build, how it works, what the demo looks like." },
   { id: "motivation", label: "Motivation",  question: "Why does it matter?",        hint: "Problem solved, who benefits, why this is worth a day." },
+  { id: "category",   label: "SDLC stage",  question: "Which SDLC stage does it target?", hint: "This hackathon is about the software lifecycle — pick the stage your idea improves." },
   { id: "team",       label: "Team",        question: "Who's on the team?",         hint: "Up to 3 developers — or mark as 'team needed' so others can join later." },
   { id: "contact",    label: "Contact",     question: "Best way to reach the submitter?", hint: "Slack handle or email." },
   { id: "review",     label: "Review",      question: "Review and submit.",         hint: "Check your answers before sending." },
@@ -48,6 +65,7 @@ const STEPS: { id: StepId; label: string; question: string; hint: string }[] = [
 
 export function SubmissionForm({
   action,
+  submitter,
   defaultValues,
   submitLabel = "Submit",
   celebrate = false,
@@ -58,6 +76,8 @@ export function SubmissionForm({
     title: defaultValues?.title ?? "",
     description: defaultValues?.description ?? "",
     motivation: defaultValues?.motivation ?? "",
+    category: defaultValues?.category ?? "",
+    categoryOther: defaultValues?.categoryOther ?? "",
     developers: defaultValues?.developers ?? [],
     teamNeeded: defaultValues?.teamNeeded ?? false,
     teamContact: defaultValues?.teamContact ?? "",
@@ -84,6 +104,11 @@ export function SubmissionForm({
       case "motivation":
         if (data.motivation.trim().length < 10) return "A sentence or two on why.";
         if (data.motivation.length > 1000) return "Max 1000 characters.";
+        return null;
+      case "category":
+        if (!data.category) return "Pick an SDLC stage.";
+        if (data.category === "other" && data.categoryOther.trim().length < 2)
+          return "Name the stage/area for “Other”.";
         return null;
       case "team":
         if (!data.teamNeeded && data.developers.length === 0)
@@ -153,6 +178,8 @@ export function SubmissionForm({
         <input type="hidden" name="title" value={data.title} />
         <input type="hidden" name="description" value={data.description} />
         <input type="hidden" name="motivation" value={data.motivation} />
+        <input type="hidden" name="category" value={data.category} />
+        <input type="hidden" name="categoryOther" value={data.categoryOther} />
         <input type="hidden" name="developers" value={data.developers.join("\n")} />
         <input type="hidden" name="teamNeeded" value={data.teamNeeded ? "true" : "false"} />
         <input type="hidden" name="teamContact" value={data.teamContact} />
@@ -177,6 +204,7 @@ export function SubmissionForm({
                 data={data}
                 setData={setData}
                 onAdvance={next}
+                submitter={submitter}
               />
             </div>
           </motion.div>
@@ -252,11 +280,13 @@ function StepInput({
   data,
   setData,
   onAdvance,
+  submitter,
 }: {
   step: StepId;
   data: Data;
   setData: React.Dispatch<React.SetStateAction<Data>>;
   onAdvance: () => void;
+  submitter?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
@@ -333,6 +363,16 @@ function StepInput({
       </FieldShell>
     );
   }
+  if (step === "category") {
+    return (
+      <CategoryPicker
+        value={data.category}
+        other={data.categoryOther}
+        onChange={(category) => setData({ ...data, category })}
+        onChangeOther={(categoryOther) => setData({ ...data, categoryOther })}
+      />
+    );
+  }
   if (step === "team") {
     return (
       <div className="space-y-4">
@@ -385,7 +425,7 @@ function StepInput({
       </FieldShell>
     );
   }
-  return <Review data={data} />;
+  return <Review data={data} submitter={submitter} />;
 }
 
 function FieldShell({
@@ -544,20 +584,151 @@ function ChipInput({
   );
 }
 
-function Review({ data }: { data: Data }) {
-  const devs = data.teamNeeded
+function CategoryPicker({
+  value,
+  other,
+  onChange,
+  onChangeOther,
+}: {
+  value: SubmissionCategory | "";
+  other: string;
+  onChange: (v: SubmissionCategory) => void;
+  onChangeOther: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        {CATEGORY_ORDER.map((key) => {
+          const meta = CATEGORY_META[key];
+          const selected = value === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onChange(key)}
+              aria-pressed={selected}
+              className={`flex items-center gap-2.5 rounded-md border px-3 py-3 text-left text-sm transition ${
+                selected
+                  ? "border-[color:var(--color-accent-2)] bg-[color:var(--color-accent-2)]/12 text-[color:var(--color-foreground)]"
+                  : "border-[color:var(--color-border)] bg-[color:var(--color-surface)]/70 text-[color:var(--color-muted)] hover:border-[color:var(--color-accent-2)]/50 hover:text-[color:var(--color-foreground)]"
+              }`}
+            >
+              <span className="text-lg leading-none">{meta.icon}</span>
+              <span className="leading-tight">{meta.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <AnimatePresence initial={false}>
+        {value === "other" && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <input
+              type="text"
+              autoFocus
+              value={other}
+              onChange={(e) => onChangeOther(e.target.value)}
+              maxLength={60}
+              placeholder="Name the stage or area — e.g. “Code review”, “Security”, “Docs”"
+              className="input"
+            />
+            <p className="mt-1.5 text-xs text-[color:var(--color-muted)]">
+              For ideas that don&apos;t fit one of the SDLC stages above.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function Review({ data, submitter }: { data: Data; submitter?: string }) {
+  const devsLine = data.teamNeeded
     ? data.developers.length > 0
       ? `${data.developers.join(", ")} — open to more (team needed)`
       : "Team needed — open to anyone joining"
     : data.developers.join(", ");
+  const spotsOpen = Math.max(0, 3 - data.developers.length);
+  const cat = data.category
+    ? categoryDisplay(data.category, data.categoryOther)
+    : null;
+
   return (
-    <dl className="divide-y divide-[color:var(--color-border)] rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/70">
-      <Row k="Title" v={data.title} />
-      <Row k="Idea" v={data.description} multi />
-      <Row k="Motivation" v={data.motivation} multi />
-      <Row k="Developers" v={devs} />
-      <Row k="Contact" v={data.teamContact} />
-    </dl>
+    <div className="space-y-5">
+      {/* Live preview: how the idea will appear on the board */}
+      <div>
+        <p className="text-xs text-[color:var(--color-muted)] mb-2">
+          How it&apos;ll appear on the board
+        </p>
+        <div className="card">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="text-lg font-semibold leading-tight">
+              {data.title || (
+                <span className="text-[color:var(--color-muted)] italic">Untitled</span>
+              )}
+            </h3>
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              {data.teamNeeded && <TeamNeededBadge />}
+              <StatusBadge status="pending" />
+            </div>
+          </div>
+
+          <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+            {cat && (
+              <span className="pill border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]/70 text-[color:var(--color-muted)]">
+                {cat.icon} {cat.label}
+              </span>
+            )}
+            <span className="text-xs text-[color:var(--color-muted)]">
+              Submitted by {submitter || "you"}
+            </span>
+          </div>
+
+          <p className="mt-3 text-sm text-[color:var(--color-muted)] line-clamp-3">
+            {data.description || "—"}
+          </p>
+
+          <div className="mt-4 flex items-center gap-2 flex-wrap">
+            {data.developers.slice(0, 4).map((d) => (
+              <span
+                key={d}
+                className="pill border border-[color:var(--color-border)] text-[color:var(--color-muted)] bg-[color:var(--color-surface-2)]/70"
+              >
+                {d}
+              </span>
+            ))}
+            {data.teamNeeded && (
+              <span className="text-xs text-[color:var(--color-accent-2)] italic">
+                {data.developers.length === 0
+                  ? "No team yet — add yourself"
+                  : `${spotsOpen} spot${spotsOpen === 1 ? "" : "s"} open`}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Full details so every field is verifiable before submitting */}
+      <div>
+        <p className="text-xs text-[color:var(--color-muted)] mb-2">Full details</p>
+        <dl className="divide-y divide-[color:var(--color-border)] rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/70">
+          <Row
+            k="SDLC stage"
+            v={cat ? `${cat.icon} ${cat.label}` : ""}
+          />
+          <Row k="Idea" v={data.description} multi />
+          <Row k="Motivation" v={data.motivation} multi />
+          <Row k="Developers" v={devsLine} />
+          <Row k="Contact" v={data.teamContact} />
+        </dl>
+      </div>
+    </div>
   );
 }
 

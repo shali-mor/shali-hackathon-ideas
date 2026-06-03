@@ -35,11 +35,16 @@ export default async function AdminPage({
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="text-4xl font-bold tracking-tight">Review queue</h1>
-        <p className="mt-1 text-sm text-[color:var(--color-muted)]">
-          Accept or reject submissions. Submitters see status update in their dashboard.
-        </p>
+      <header className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">Review queue</h1>
+          <p className="mt-1 text-sm text-[color:var(--color-muted)]">
+            Accept or reject submissions. Submitters see status update in their dashboard.
+          </p>
+        </div>
+        <Link href="/ideas/export" className="btn btn-ghost">
+          📄 Export ideas to PDF
+        </Link>
       </header>
 
       <nav className="flex flex-wrap gap-2">

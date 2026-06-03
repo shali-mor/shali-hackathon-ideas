@@ -13,7 +13,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "mint-judge": "tsx scripts/mint-judge-token.ts",
-    "invite-judge": "tsx scripts/send-judge-invite.ts"
+    "invite-judge": "tsx scripts/send-judge-invite.ts",
+    "backfill-categories": "tsx scripts/backfill-categories.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

@@ -37,8 +37,8 @@ export default function RulesPage() {
     },
     {
       n: 6,
-      title: "Judging is the day after",
-      body: "Demos and judging happen on 2026-06-10 — the day after the hackathon.",
+      title: "Judging is two days after",
+      body: "Demos and judging happen on Thursday 2026-06-11 — two days after the hackathon.",
     },
   ];
 

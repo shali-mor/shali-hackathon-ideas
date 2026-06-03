@@ -40,10 +40,13 @@ export default async function EditSubmissionPage({
 
       <SubmissionForm
         action={boundUpdate}
+        submitter={idea.submittedByName ?? idea.submittedByEmail}
         defaultValues={{
           title: idea.title,
           description: idea.description,
           motivation: idea.motivation,
+          category: idea.category,
+          categoryOther: idea.categoryOther ?? "",
           developers: idea.developers,
           teamNeeded: idea.teamNeeded,
           teamContact: idea.teamContact,

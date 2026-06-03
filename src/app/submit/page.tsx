@@ -41,6 +41,7 @@ export default async function SubmitPage() {
       ) : (
         <SubmissionForm
           action={createSubmission}
+          submitter={session.user.name ?? session.user.email ?? undefined}
           submitLabel="Submit idea"
           celebrate
         />
