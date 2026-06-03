@@ -61,6 +61,9 @@ export default async function RootLayout({
               <Link href="/ideas" className="hover:text-[color:var(--color-foreground)] transition">
                 Browse
               </Link>
+              <Link href="/insights" className="hover:text-[color:var(--color-foreground)] transition">
+                Insights
+              </Link>
               {session && admin && (
                 <Link
                   href="/admin"
@@ -97,7 +100,7 @@ export default async function RootLayout({
 
         <footer className="border-t border-[color:var(--color-border)] py-6 text-center text-xs text-[color:var(--color-muted)]">
           <span className="dot-live mr-2 align-middle" />
-          Hackathon · 2026-06-09 · judging 2026-06-10
+          Hackathon · 2026-06-09 · judging 2026-06-11
         </footer>
       </body>
     </html>

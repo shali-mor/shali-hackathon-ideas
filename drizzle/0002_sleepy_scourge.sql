@@ -1,0 +1,2 @@
+CREATE TYPE "public"."submission_category" AS ENUM('bugs', 'testing', 'deployment', 'performance', 'security', 'ai', 'tooling', 'docs', 'other');--> statement-breakpoint
+ALTER TABLE "submissions" ADD COLUMN "category" "submission_category" DEFAULT 'other' NOT NULL;

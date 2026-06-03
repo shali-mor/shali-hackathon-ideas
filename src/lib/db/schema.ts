@@ -16,11 +16,25 @@ export const submissionStatus = pgEnum("submission_status", [
   "rejected",
 ]);
 
+// SDLC lifecycle stages — the hackathon's organising theme.
+export const submissionCategory = pgEnum("submission_category", [
+  "planning",
+  "design",
+  "development",
+  "testing",
+  "deployment",
+  "maintenance",
+  "other",
+]);
+
 export const submissions = pgTable("submissions", {
   id: uuid("id").defaultRandom().primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   motivation: text("motivation").notNull(),
+  category: submissionCategory("category").notNull().default("other"),
+  // Free-text label used only when category === "other".
+  categoryOther: text("category_other"),
   developers: text("developers").array().notNull(),
   teamNeeded: boolean("team_needed").notNull().default(false),
   teamContact: text("team_contact").notNull(),

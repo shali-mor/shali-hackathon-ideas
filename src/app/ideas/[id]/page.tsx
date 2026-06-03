@@ -6,6 +6,7 @@ import { getSession } from "@/lib/session";
 import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
 import { isAdmin } from "@/lib/admin";
 import { submissionsOpen } from "@/lib/dates";
+import { categoryDisplay } from "@/lib/insights";
 import { JoinTeamButton } from "./JoinTeamButton";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +52,14 @@ export default async function IdeaDetailPage({
         <div className="flex items-center gap-3 flex-wrap">
           <StatusBadge status={idea.status} />
           {idea.teamNeeded && <TeamNeededBadge />}
+          {(() => {
+            const c = categoryDisplay(idea.category, idea.categoryOther);
+            return (
+              <span className="pill border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]/70 text-[color:var(--color-muted)]">
+                {c.icon} {c.label}
+              </span>
+            );
+          })()}
           <span className="text-xs text-[color:var(--color-muted)]">
             submitted by {idea.submittedByName ?? idea.submittedByEmail}
           </span>

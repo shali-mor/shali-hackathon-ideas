@@ -57,10 +57,10 @@ export function judgeInviteEmail(args: {
 }) {
   const { judgeName, judgeUrl, appUrl } = args;
   const subject = "Hackathon judging — your private review link";
-  const text = `Hi ${judgeName},\n\nYou're invited to review accepted hackathon ideas on 2026-06-10.\nOpen your private review board: ${judgeUrl}\n\n${appUrl}`;
+  const text = `Hi ${judgeName},\n\nYou're invited to review accepted hackathon ideas on 2026-06-11.\nOpen your private review board: ${judgeUrl}\n\n${appUrl}`;
   const html = `
     <p>Hi ${escapeHtml(judgeName)},</p>
-    <p>You're invited to review accepted hackathon ideas on <strong>2026-06-10</strong>.</p>
+    <p>You're invited to review accepted hackathon ideas on <strong>2026-06-11</strong>.</p>
     <p><a href="${judgeUrl}">Open your private review board</a></p>
     <p style="color:#666;font-size:12px">Keep this link private — it's tied to you.</p>
   `;
