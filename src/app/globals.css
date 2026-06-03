@@ -142,14 +142,19 @@ body::after {
 /* Print / "Save as PDF" stylesheet for /ideas/export                  */
 /* ------------------------------------------------------------------ */
 @media print {
-  /* Light, ink-friendly canvas */
+  /* Force the browser to actually print background colours & gradients,
+     instead of stripping them to save ink. This is what keeps the PDF
+     colourful — the export document carries its own colours. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   :root {
     color-scheme: light;
   }
   html,
   body {
     background: #ffffff !important;
-    color: #111118 !important;
   }
   /* Kill the dark-theme ambient/grid backgrounds */
   body::before,
@@ -158,18 +163,18 @@ body::after {
   }
 
   @page {
-    margin: 16mm 14mm;
+    margin: 12mm;
   }
 
-  /* Hide everything chrome: site nav, footer, buttons, action bar */
-  header nav,
+  /* Hide site chrome: nav, footer, the on-screen action bar / print button */
+  body > header,
   nav,
   footer:not(.export-footer):not(.export-card-foot),
   .no-print {
     display: none !important;
   }
 
-  /* Strip layout wrappers so the document fills the page */
+  /* Let the document fill the page; drop the on-screen "paper" frame */
   main,
   .export-root {
     max-width: none !important;
@@ -177,164 +182,17 @@ body::after {
     margin: 0 !important;
     padding: 0 !important;
   }
-
   .export-doc {
-    color: #111118 !important;
+    border: none !important;
+    border-radius: 0 !important;
   }
 
-  /* Cover */
-  .export-cover {
-    border-bottom: 2px solid #111118 !important;
-    padding-bottom: 16px;
-    margin-bottom: 24px;
+  /* Keep the hero with the first content, and never split an idea card */
+  .export-hero {
     break-after: avoid;
-  }
-  .export-cover-brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .export-title {
-    font-size: 26pt;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    margin: 0;
-    color: #111118 !important;
-  }
-  .export-subtitle {
-    font-size: 11pt;
-    color: #555566 !important;
-    margin: 2px 0 0;
-  }
-  .export-meta {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-top: 18px;
-  }
-  .export-meta dt {
-    font-size: 7.5pt;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #6b6b7a !important;
-    margin: 0;
-  }
-  .export-meta dd {
-    font-size: 9.5pt;
-    font-weight: 600;
-    margin: 2px 0 0;
-    color: #111118 !important;
-  }
-
-  /* Idea cards — never split across a page */
-  .export-list {
-    display: block;
   }
   .export-card {
     break-inside: avoid;
     page-break-inside: avoid;
-    border: 1px solid #d4d4e0 !important;
-    border-radius: 8px;
-    padding: 16px 18px;
-    margin-bottom: 16px;
-    background: #ffffff !important;
-  }
-  .export-card-head {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    margin-bottom: 8px;
-  }
-  .export-index {
-    font-size: 11pt;
-    font-weight: 700;
-    color: #818cf8 !important;
-    font-variant-numeric: tabular-nums;
-  }
-  .export-card-title {
-    font-size: 15pt;
-    font-weight: 700;
-    margin: 0;
-    color: #111118 !important;
-    line-height: 1.2;
-  }
-  .export-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
-  }
-  .export-tag {
-    font-size: 8pt;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 999px;
-    border: 1px solid #c8c8d6 !important;
-    color: #44445a !important;
-    background: #f4f4fa !important;
-  }
-  .export-tag-cat {
-    border-color: #818cf8 !important;
-    color: #4338ca !important;
-    background: #eef0ff !important;
-  }
-  .export-tag-team {
-    border-color: #a78bfa !important;
-    color: #6d28d9 !important;
-    background: #f3eeff !important;
-  }
-  .export-section {
-    margin-bottom: 10px;
-  }
-  .export-section h3 {
-    font-size: 7.5pt;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #6b6b7a !important;
-    margin: 0 0 3px;
-    font-weight: 700;
-  }
-  .export-section p {
-    font-size: 10pt;
-    line-height: 1.5;
-    margin: 0;
-    color: #1f1f2e !important;
-    white-space: pre-wrap;
-  }
-  .export-devs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-  }
-  .export-dev {
-    font-size: 8.5pt;
-    padding: 1px 8px;
-    border-radius: 999px;
-    border: 1px solid #d4d4e0 !important;
-    color: #333344 !important;
-    background: #f6f6fb !important;
-  }
-  .export-card-foot {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid #e6e6ee !important;
-    font-size: 8.5pt;
-    color: #555566 !important;
-  }
-  .export-footer {
-    margin-top: 20px;
-    padding-top: 10px;
-    border-top: 1px solid #d4d4e0 !important;
-    text-align: center;
-    font-size: 8pt;
-    color: #888899 !important;
-  }
-  .export-empty {
-    font-size: 11pt;
-    color: #555566 !important;
   }
 }

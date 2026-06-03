@@ -94,6 +94,21 @@ export function categoryIcon(key: string): string {
   return CATEGORY_META[key as CategoryKey]?.icon ?? CATEGORY_META.other.icon;
 }
 
+// A distinct accent colour per SDLC stage, for charts, badges, and the PDF.
+export const CATEGORY_COLOR: Record<CategoryKey, string> = {
+  planning: "#6366f1", // indigo
+  design: "#d946ef", // fuchsia
+  development: "#3b82f6", // blue
+  testing: "#10b981", // emerald
+  deployment: "#f59e0b", // amber
+  maintenance: "#06b6d4", // cyan
+  other: "#64748b", // slate
+};
+
+export function categoryColor(key: string): string {
+  return CATEGORY_COLOR[key as CategoryKey] ?? CATEGORY_COLOR.other;
+}
+
 // Resolves what to show for a submission's category, honouring the free-text
 // label when the stage is "other".
 export function categoryDisplay(
