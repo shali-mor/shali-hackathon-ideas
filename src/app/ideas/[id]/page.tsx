@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
 import { getSession } from "@/lib/session";
@@ -18,7 +18,8 @@ export default async function IdeaDetailPage({
 }) {
   const { id } = await params;
   const session = await getSession();
-  const admin = isAdmin(session?.user?.email);
+  if (!session?.user) redirect(`/auth/signin?callbackUrl=/ideas/${id}`);
+  const admin = isAdmin(session.user.email);
 
   const idea = await db.query.submissions.findFirst({
     where: eq(submissions.id, id),
@@ -26,25 +27,7 @@ export default async function IdeaDetailPage({
   if (!idea) notFound();
 
   const isOwner =
-    session?.user?.email?.toLowerCase() === idea.submittedByEmail.toLowerCase();
-  const canView =
-    admin ||
-    isOwner ||
-    idea.status === "accepted" ||
-    (idea.teamNeeded && idea.status !== "rejected");
-
-  if (!canView) {
-    return (
-      <div className="card text-center py-16">
-        <p className="text-[color:var(--color-muted)]">
-          This idea isn&apos;t public yet.
-        </p>
-        <Link href="/ideas" className="btn btn-ghost mt-4">
-          ← Back to ideas
-        </Link>
-      </div>
-    );
-  }
+    session.user.email?.toLowerCase() === idea.submittedByEmail.toLowerCase();
 
   return (
     <article className="max-w-3xl space-y-10">
@@ -150,7 +133,7 @@ export default async function IdeaDetailPage({
         </p>
       </Section>
 
-      {idea.reviewNote && (
+      {idea.reviewNote && (admin || isOwner) && (
         <div className="card">
           <div className="text-xs text-[color:var(--color-muted)] mb-2">Reviewer note</div>
           <p className="text-sm whitespace-pre-wrap">{idea.reviewNote}</p>

@@ -1,9 +1,9 @@
 import type { CSSProperties } from "react";
-import { desc, or, eq, and, ne } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import { desc } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
 import type { Submission } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { isAdmin } from "@/lib/admin";
 import { BrandMark } from "@/components/Brand";
 import { PrintButton } from "@/components/PrintButton";
 import { categoryDisplay, categoryColor } from "@/lib/insights";
@@ -32,23 +32,12 @@ function statusClass(status: string): string {
 
 export default async function ExportPage() {
   const session = await getSession();
-  const admin = isAdmin(session?.user?.email);
+  if (!session?.user) redirect("/auth/signin?callbackUrl=/ideas/export");
 
-  const rows: Submission[] = admin
-    ? await db.select().from(submissions).orderBy(desc(submissions.createdAt))
-    : await db
-        .select()
-        .from(submissions)
-        .where(
-          or(
-            eq(submissions.status, "accepted"),
-            and(
-              eq(submissions.teamNeeded, true),
-              ne(submissions.status, "rejected"),
-            ),
-          ),
-        )
-        .orderBy(desc(submissions.createdAt));
+  const rows: Submission[] = await db
+    .select()
+    .from(submissions)
+    .orderBy(desc(submissions.createdAt));
 
   const generatedOn = new Intl.DateTimeFormat("en-US", {
     dateStyle: "full",
@@ -159,11 +148,9 @@ export default async function ExportPage() {
       {/* Screen-only action bar — hidden in print */}
       <div className="no-print mb-8 flex items-center justify-between gap-4">
         <p className="text-sm text-[color:var(--color-muted)]">
-          {admin
-            ? "Admin export — every submission is included."
-            : "Public export — accepted ideas and open team-needed ideas."}{" "}
-          Use your browser&rsquo;s &ldquo;Save as PDF&rdquo; destination, and keep
-          &ldquo;Background graphics&rdquo; on for the colours.
+          Every submission is included. Use your browser&rsquo;s &ldquo;Save as
+          PDF&rdquo; destination, and keep &ldquo;Background graphics&rdquo; on
+          for the colours.
         </p>
         <PrintButton />
       </div>
