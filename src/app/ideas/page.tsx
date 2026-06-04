@@ -1,44 +1,32 @@
 import Link from "next/link";
-import { desc, or, eq, and, ne } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import { desc } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
 import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
 import { getSession } from "@/lib/session";
-import { isAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
 export default async function IdeasPage() {
   const session = await getSession();
-  const admin = isAdmin(session?.user?.email);
+  if (!session?.user) redirect("/auth/signin?callbackUrl=/ideas");
 
-  const rows = admin
-    ? await db.select().from(submissions).orderBy(desc(submissions.createdAt))
-    : await db
-        .select()
-        .from(submissions)
-        .where(
-          or(
-            eq(submissions.status, "accepted"),
-            and(eq(submissions.teamNeeded, true), ne(submissions.status, "rejected")),
-          ),
-        )
-        .orderBy(desc(submissions.createdAt));
+  const rows = await db
+    .select()
+    .from(submissions)
+    .orderBy(desc(submissions.createdAt));
 
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-4xl font-bold tracking-tight">
-          {admin ? "All submissions" : "Accepted ideas"}
-        </h1>
+        <h1 className="text-4xl font-bold tracking-tight">All ideas</h1>
         <p className="mt-2 text-sm text-[color:var(--color-muted)]">
-          {admin
-            ? "Admin view — every submission, every status."
-            : "What teams are building on 2026-06-09."}
+          Every submission — pending, accepted, and rejected.
         </p>
       </header>
 
       {rows.length === 0 ? (
-        <EmptyState admin={admin} />
+        <EmptyState />
       ) : (
         <ul className="grid md:grid-cols-2 gap-4">
           {rows.map((s) => (
@@ -90,18 +78,14 @@ export default async function IdeasPage() {
   );
 }
 
-function EmptyState({ admin }: { admin: boolean }) {
+function EmptyState() {
   return (
     <div className="card text-center py-16">
       <div className="text-5xl mb-4">🚀</div>
-      <p className="text-[color:var(--color-muted)]">
-        {admin ? "No submissions yet." : "No accepted ideas yet — check back soon."}
-      </p>
-      {!admin && (
-        <Link href="/submit" className="btn btn-primary mt-6">
-          Submit the first one
-        </Link>
-      )}
+      <p className="text-[color:var(--color-muted)]">No ideas submitted yet.</p>
+      <Link href="/submit" className="btn btn-primary mt-6">
+        Submit the first one
+      </Link>
     </div>
   );
 }

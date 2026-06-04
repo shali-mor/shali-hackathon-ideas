@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { desc, or, eq, and, ne } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import { desc } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { isAdmin } from "@/lib/admin";
 import {
   computeStats,
   submissionTrend,
@@ -20,20 +20,12 @@ export const metadata = {
 
 export default async function InsightsPage() {
   const session = await getSession();
-  const admin = isAdmin(session?.user?.email);
+  if (!session?.user) redirect("/auth/signin?callbackUrl=/insights");
 
-  const rows = admin
-    ? await db.select().from(submissions).orderBy(desc(submissions.createdAt))
-    : await db
-        .select()
-        .from(submissions)
-        .where(
-          or(
-            eq(submissions.status, "accepted"),
-            and(eq(submissions.teamNeeded, true), ne(submissions.status, "rejected")),
-          ),
-        )
-        .orderBy(desc(submissions.createdAt));
+  const rows = await db
+    .select()
+    .from(submissions)
+    .orderBy(desc(submissions.createdAt));
 
   const stats = computeStats(rows);
   const trend = submissionTrend(rows);
@@ -44,14 +36,12 @@ export default async function InsightsPage() {
       <header>
         <h1 className="text-4xl font-bold tracking-tight">Insights</h1>
         <p className="mt-2 text-sm text-[color:var(--color-muted)]">
-          {admin
-            ? "Submission metadata across every entry — counts, trend, and topics."
-            : "What's been submitted so far — and which ideas still need builders."}
+          Submission metadata across every entry — counts, trend, and topics.
         </p>
       </header>
 
       {rows.length === 0 ? (
-        <EmptyState admin={admin} />
+        <EmptyState />
       ) : (
         <>
           {/* KPI cards */}
@@ -69,20 +59,14 @@ export default async function InsightsPage() {
               accent="accent-3"
               hint="Unfilled developer seats across team-needed ideas."
             />
-            {admin ? (
-              <Kpi label="Pending review" value={stats.pending} accent="warn" />
-            ) : (
-              <Kpi label="Accepted" value={stats.accepted} accent="success" />
-            )}
+            <Kpi label="Pending review" value={stats.pending} accent="warn" />
           </section>
 
-          {admin && (
-            <section className="grid grid-cols-3 gap-4">
-              <Kpi label="Accepted" value={stats.accepted} accent="success" small />
-              <Kpi label="Pending" value={stats.pending} accent="warn" small />
-              <Kpi label="Rejected" value={stats.rejected} accent="danger" small />
-            </section>
-          )}
+          <section className="grid grid-cols-3 gap-4">
+            <Kpi label="Accepted" value={stats.accepted} accent="success" small />
+            <Kpi label="Pending" value={stats.pending} accent="warn" small />
+            <Kpi label="Rejected" value={stats.rejected} accent="danger" small />
+          </section>
 
           {/* Ideas needing owners — recruiting CTA */}
           {stats.needTeam > 0 && (
@@ -232,14 +216,12 @@ function Buckets({ buckets, total }: { buckets: CategoryBucket[]; total: number 
   );
 }
 
-function EmptyState({ admin }: { admin: boolean }) {
+function EmptyState() {
   return (
     <div className="card text-center py-16">
       <div className="text-5xl mb-4">📊</div>
       <p className="text-[color:var(--color-muted)]">
-        {admin
-          ? "No submissions yet — nothing to chart."
-          : "No public ideas yet. Insights appear once ideas are submitted."}
+        No submissions yet — nothing to chart.
       </p>
     </div>
   );
