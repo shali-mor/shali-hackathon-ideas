@@ -74,7 +74,13 @@ export default function RulesPage() {
         <h2 className="text-2xl font-bold tracking-tight">How ideas are judged</h2>
         <p className="mt-2 text-sm text-[color:var(--color-muted)]">
           External judges score each idea 1–5 on these four criteria during the
-          demos. Scores are weighted and combined to rank the winners.
+          demos. Scores are weighted and combined to rank the winners.{" "}
+          <Link
+            href="/present"
+            className="text-[color:var(--color-accent)] underline hover:brightness-110"
+          >
+            See the presentation guide →
+          </Link>
         </p>
         <ol className="mt-5 space-y-3">
           {CRITERIA.map((c) => (
