@@ -6,13 +6,13 @@ A small Next.js site for collecting and reviewing ideas for the Forcepoint hacka
 
 | | |
 |---|---|
-| Submit deadline | **2026-06-04 23:59 Asia/Jerusalem** |
+| Submit deadline | **2026-06-07 23:59 Asia/Jerusalem** (Sunday) |
 | Hack day | **2026-06-09** |
 | Judging | **2026-06-11** (external judges) |
 
 ## Rules
 
-1. **Submit before the deadline.** Submissions close 2026-06-04 23:59 Asia/Jerusalem. After that, no new entries, no edits.
+1. **Submit before the deadline.** Submissions close 2026-06-07 23:59 Asia/Jerusalem (Sunday). After that, no new entries, no edits.
 2. **Teams of up to 3.** Maximum three developers per team. Smaller is fine.
 3. **In the office, full day.** Hacking happens in person.
 4. **SDLC ideas only.** Improve velocity, productivity, or quality. Product- or project-related is fine; customer-facing features are out of scope.
