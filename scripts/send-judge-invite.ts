@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./load-env";
 import { mintJudgeToken } from "../src/lib/judge-tokens";
 import { sendEmail, judgeInviteEmail } from "../src/lib/email";
 

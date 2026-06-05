@@ -22,7 +22,9 @@ export async function mintJudgeToken(payload: JudgePayload): Promise<string> {
     .setIssuer(ISSUER)
     .setAudience(AUDIENCE)
     .setIssuedAt()
-    .setExpirationTime("2026-06-18T00:00:00Z")
+    // jose's setExpirationTime takes a Date, epoch seconds, or a relative span
+    // like "30d" — an absolute ISO string throws "Invalid time period format".
+    .setExpirationTime(new Date("2026-06-18T00:00:00Z"))
     .sign(getSecret());
 }
 
