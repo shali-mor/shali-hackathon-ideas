@@ -2,7 +2,7 @@ import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 export const TZ = "Asia/Jerusalem";
 
-export const SUBMISSION_DEADLINE = fromZonedTime("2026-06-04 23:59:59", TZ);
+export const SUBMISSION_DEADLINE = fromZonedTime("2026-06-07 23:59:59", TZ);
 export const HACKATHON_DAY = fromZonedTime("2026-06-09 09:00:00", TZ);
 export const JUDGING_DAY = fromZonedTime("2026-06-11 09:00:00", TZ);
 
