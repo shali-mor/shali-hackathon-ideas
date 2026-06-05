@@ -7,26 +7,50 @@ import { getSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-export default async function IdeasPage() {
+export default async function IdeasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
+  const { filter } = await searchParams;
+  const teamOnly = filter === "team";
+
   const session = await getSession();
   if (!session?.user) redirect("/auth/signin?callbackUrl=/ideas");
 
-  const rows = await db
+  const all = await db
     .select()
     .from(submissions)
     .orderBy(desc(submissions.createdAt));
 
+  const teamNeededCount = all.filter((s) => s.teamNeeded).length;
+  const rows = teamOnly ? all.filter((s) => s.teamNeeded) : all;
+
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-4xl font-bold tracking-tight">All ideas</h1>
+        <h1 className="text-4xl font-bold tracking-tight">
+          {teamOnly ? "Ideas needing a team" : "All ideas"}
+        </h1>
         <p className="mt-2 text-sm text-[color:var(--color-muted)]">
-          Every submission — pending, accepted, and rejected.
+          {teamOnly
+            ? "Open to anyone — click an idea and add yourself to claim a spot."
+            : "Every submission — pending, accepted, and rejected."}
         </p>
       </header>
 
+      <nav className="flex items-center gap-2">
+        <FilterTab href="/ideas" active={!teamOnly} label="All ideas" count={all.length} />
+        <FilterTab
+          href="/ideas?filter=team"
+          active={teamOnly}
+          label="＋ Team needed"
+          count={teamNeededCount}
+        />
+      </nav>
+
       {rows.length === 0 ? (
-        <EmptyState />
+        <EmptyState teamOnly={teamOnly} />
       ) : (
         <ul className="grid md:grid-cols-2 gap-4">
           {rows.map((s) => (
@@ -78,14 +102,47 @@ export default async function IdeasPage() {
   );
 }
 
-function EmptyState() {
+function FilterTab({
+  href,
+  active,
+  label,
+  count,
+}: {
+  href: string;
+  active: boolean;
+  label: string;
+  count: number;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`pill border text-sm transition ${
+        active
+          ? "border-[color:var(--color-accent-2)] bg-[color:var(--color-accent-2)]/15 text-[color:var(--color-foreground)]"
+          : "border-[color:var(--color-border)] text-[color:var(--color-muted)] hover:text-[color:var(--color-foreground)] hover:border-[color:var(--color-accent-2)]/50"
+      }`}
+    >
+      {label}
+      <span className="ml-1.5 tabular-nums opacity-70">{count}</span>
+    </Link>
+  );
+}
+
+function EmptyState({ teamOnly }: { teamOnly: boolean }) {
   return (
     <div className="card text-center py-16">
-      <div className="text-5xl mb-4">🚀</div>
-      <p className="text-[color:var(--color-muted)]">No ideas submitted yet.</p>
-      <Link href="/submit" className="btn btn-primary mt-6">
-        Submit the first one
-      </Link>
+      <div className="text-5xl mb-4">{teamOnly ? "🤝" : "🚀"}</div>
+      <p className="text-[color:var(--color-muted)]">
+        {teamOnly
+          ? "No ideas are looking for a team right now."
+          : "No ideas submitted yet."}
+      </p>
+      {!teamOnly && (
+        <Link href="/submit" className="btn btn-primary mt-6">
+          Submit the first one
+        </Link>
+      )}
     </div>
   );
 }
