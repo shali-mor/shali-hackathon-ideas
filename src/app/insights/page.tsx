@@ -80,7 +80,7 @@ export default async function InsightsPage() {
                   necessarily joining. Pick one up.
                 </p>
               </div>
-              <Link href="/ideas" className="btn btn-primary shrink-0">
+              <Link href="/ideas?filter=team" className="btn btn-primary shrink-0">
                 Browse open ideas →
               </Link>
             </div>
