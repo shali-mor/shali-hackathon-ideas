@@ -213,6 +213,7 @@ export type SubmissionStats = {
   rejected: number;
   needTeam: number; // ideas flagged "team needed" — looking for owners/builders
   openSpots: number; // total unfilled developer slots across team-needed ideas
+  participants: number; // distinct people actually building (listed as developers)
 };
 
 const MAX_TEAM = 3;
@@ -225,7 +226,12 @@ export function computeStats(rows: Submission[]): SubmissionStats {
     rejected: 0,
     needTeam: 0,
     openSpots: 0,
+    participants: 0,
   };
+  // People in the developers array are the actual builders. A submitter who
+  // only proposed an idea (e.g. a "team needed" idea they're not joining) is
+  // not listed there, so they're correctly excluded. Dedupe case-insensitively.
+  const builders = new Set<string>();
   for (const r of rows) {
     if (r.status === "accepted") stats.accepted++;
     else if (r.status === "pending") stats.pending++;
@@ -234,6 +240,11 @@ export function computeStats(rows: Submission[]): SubmissionStats {
       stats.needTeam++;
       stats.openSpots += Math.max(0, MAX_TEAM - r.developers.length);
     }
+    for (const dev of r.developers) {
+      const name = dev.trim().toLowerCase();
+      if (name) builders.add(name);
+    }
   }
+  stats.participants = builders.size;
   return stats;
 }
