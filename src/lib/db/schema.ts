@@ -7,6 +7,7 @@ import {
   integer,
   boolean,
   pgEnum,
+  unique,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
@@ -54,6 +55,33 @@ export const submissions = pgTable("submissions", {
 
 export type Submission = typeof submissions.$inferSelect;
 export type NewSubmission = typeof submissions.$inferInsert;
+
+// One row per (judge, submission). Judges score the four rubric criteria 1–5;
+// re-submitting updates the existing row (upsert on the unique constraint).
+export const judgeScores = pgTable(
+  "judge_scores",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    submissionId: uuid("submission_id")
+      .notNull()
+      .references(() => submissions.id, { onDelete: "cascade" }),
+    judgeEmail: text("judge_email").notNull(),
+    judgeName: text("judge_name"),
+    impact: integer("impact").notNull(),
+    demo: integer("demo").notNull(),
+    pitch: integer("pitch").notNull(),
+    adoptability: integer("adoptability").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [unique("judge_scores_judge_submission").on(t.judgeEmail, t.submissionId)],
+);
+
+export type JudgeScore = typeof judgeScores.$inferSelect;
 
 // Auth.js v5 / drizzle adapter tables -----------------------------------
 

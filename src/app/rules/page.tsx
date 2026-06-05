@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { submissionsOpen, SUBMISSION_DEADLINE, formatInTZ } from "@/lib/dates";
+import { CRITERIA } from "@/lib/judging";
 
 export const metadata = {
   title: "Rules · Forcepoint Hackathon",
@@ -68,6 +69,29 @@ export default function RulesPage() {
           </li>
         ))}
       </ol>
+
+      <section className="mt-12">
+        <h2 className="text-2xl font-bold tracking-tight">How ideas are judged</h2>
+        <p className="mt-2 text-sm text-[color:var(--color-muted)]">
+          External judges score each idea 1–5 on these four criteria during the
+          demos. Scores are weighted and combined to rank the winners.
+        </p>
+        <ol className="mt-5 space-y-3">
+          {CRITERIA.map((c) => (
+            <li key={c.key} className="card flex items-start gap-4">
+              <span className="pill border border-[color:var(--color-accent-2)]/40 bg-[color:var(--color-accent-2)]/15 text-[color:var(--color-accent-2)] tabular-nums shrink-0">
+                {Math.round(c.weight * 100)}%
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-base font-semibold">{c.label}</h3>
+                <p className="mt-0.5 text-sm text-[color:var(--color-muted)] leading-relaxed">
+                  {c.blurb}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <div className="mt-10 flex flex-wrap items-center gap-3">
         {open ? (
