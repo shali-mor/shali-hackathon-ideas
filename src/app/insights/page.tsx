@@ -59,7 +59,12 @@ export default async function InsightsPage() {
               accent="accent-3"
               hint="Unfilled developer seats across team-needed ideas."
             />
-            <Kpi label="Pending review" value={stats.pending} accent="warn" />
+            <Kpi
+              label="Participants"
+              value={stats.participants}
+              accent="success"
+              hint="Distinct people actually building. Submitters who aren't on a team aren't counted."
+            />
           </section>
 
           <section className="grid grid-cols-3 gap-4">
