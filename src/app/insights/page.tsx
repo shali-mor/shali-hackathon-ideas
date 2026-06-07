@@ -45,19 +45,13 @@ export default async function InsightsPage() {
       ) : (
         <>
           {/* KPI cards */}
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <section className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             <Kpi label="Total ideas" value={stats.total} accent="accent" />
             <Kpi
               label="Need an owner"
               value={stats.needTeam}
               accent="accent-2"
               hint="Ideas flagged “team needed” — looking for someone to build them."
-            />
-            <Kpi
-              label="Open team spots"
-              value={stats.openSpots}
-              accent="accent-3"
-              hint="Unfilled developer seats across team-needed ideas."
             />
             <Kpi
               label="Participants"

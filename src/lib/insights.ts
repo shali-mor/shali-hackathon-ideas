@@ -212,11 +212,8 @@ export type SubmissionStats = {
   pending: number;
   rejected: number;
   needTeam: number; // ideas flagged "team needed" — looking for owners/builders
-  openSpots: number; // total unfilled developer slots across team-needed ideas
   participants: number; // distinct people actually building (listed as developers)
 };
-
-const MAX_TEAM = 3;
 
 export function computeStats(rows: Submission[]): SubmissionStats {
   const stats: SubmissionStats = {
@@ -225,7 +222,6 @@ export function computeStats(rows: Submission[]): SubmissionStats {
     pending: 0,
     rejected: 0,
     needTeam: 0,
-    openSpots: 0,
     participants: 0,
   };
   // People in the developers array are the actual builders. A submitter who
@@ -238,7 +234,6 @@ export function computeStats(rows: Submission[]): SubmissionStats {
     else if (r.status === "rejected") stats.rejected++;
     if (r.teamNeeded) {
       stats.needTeam++;
-      stats.openSpots += Math.max(0, MAX_TEAM - r.developers.length);
     }
     for (const dev of r.developers) {
       const name = dev.trim().toLowerCase();
