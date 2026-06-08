@@ -30,7 +30,13 @@ const JUDGES: Judge[] = [
     photo: "/judge-photos/eyal-fingold.png",
   },
   { name: "Tal Shapiro", initials: "TS" },
-  { name: "Roy Fintuch", initials: "RF" },
+  {
+    name: "Roy Fintuch",
+    initials: "RF",
+    title: "Advisor & Investor",
+    company: "Ex Founder & CTO · Dome9 ($200M exit)",
+    photo: "/judge-photos/roy-fintuch.png",
+  },
 ];
 
 const ADVANCE_MS = 12_000; // seconds per slide
