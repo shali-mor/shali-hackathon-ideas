@@ -1,5 +1,6 @@
 import { db, submissions } from "@/lib/db";
 import { computeStats, bucketByCategory } from "@/lib/insights";
+import { JUDGING_DAY } from "@/lib/dates";
 import { KioskDeck } from "@/components/KioskDeck";
 
 export const dynamic = "force-dynamic";
@@ -24,12 +25,20 @@ export default async function ScreenPage() {
     count: b.count,
   }));
 
+  // Idea titles for the scrolling ticker — celebrate the accepted set, falling
+  // back to everything that isn't rejected, then to all.
+  const accepted = rows.filter((r) => r.status === "accepted").map((r) => r.title);
+  const nonRejected = rows.filter((r) => r.status !== "rejected").map((r) => r.title);
+  const titles = (accepted.length ? accepted : nonRejected.length ? nonRejected : rows.map((r) => r.title));
+
   return (
     <KioskDeck
       participants={stats.participants}
       ideas={stats.total}
       accepted={stats.accepted}
       buckets={buckets}
+      titles={titles}
+      judgingTs={JUDGING_DAY.getTime()}
     />
   );
 }
