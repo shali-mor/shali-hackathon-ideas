@@ -29,7 +29,13 @@ const JUDGES: Judge[] = [
     company: "Native",
     photo: "/judge-photos/eyal-fingold.png",
   },
-  { name: "Tal Shapiro", initials: "TS" },
+  {
+    name: "Tal Shapiro",
+    initials: "TS",
+    title: "Director of Engineering",
+    company: "FundGuard",
+    photo: "/judge-photos/tal-shapiro.png",
+  },
   {
     name: "Roy Fintuch",
     initials: "RF",
