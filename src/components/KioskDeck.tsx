@@ -1,8 +1,17 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { CRITERIA } from "@/lib/judging";
+
+// The wireframe orb (three.js) — client-only, same component the home hero uses.
+const Hero3D = dynamic(() => import("./Hero3D").then((m) => m.Hero3D), {
+  ssr: false,
+  loading: () => null,
+});
+
+const HACKATHON_MS = 24 * 60 * 60 * 1000; // 24-hour countback
 
 type Bucket = { label: string; icon: string; count: number };
 
@@ -20,7 +29,6 @@ type Props = {
   accepted: number;
   buckets: Bucket[];
   titles: string[];
-  judgingTs: number;
 };
 
 const JUDGES: Judge[] = [
@@ -56,10 +64,10 @@ export function KioskDeck({
   accepted,
   buckets,
   titles,
-  judgingTs,
 }: Props) {
+  const endTs = useHackathonEnd();
   const slides: { key: string; node: ReactNode }[] = [
-    { key: "welcome", node: <Welcome judgingTs={judgingTs} /> },
+    { key: "welcome", node: <Welcome endTs={endTs} /> },
     {
       key: "numbers",
       node: <Numbers participants={participants} ideas={ideas} accepted={accepted} />,
@@ -102,6 +110,17 @@ export function KioskDeck({
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-[color:var(--color-background)]">
       <AnimatedBackdrop />
+
+      {/* 3D wireframe orb — featured on the welcome/starting slide */}
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[5] -translate-x-1/2 -translate-y-1/2"
+        style={{ width: "min(72vh, 72vw)", height: "min(72vh, 72vw)" }}
+        animate={{ opacity: slides[i].key === "welcome" ? 0.7 : 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Hero3D />
+      </motion.div>
 
       {/* top bar */}
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-10 py-6 text-sm text-[color:var(--color-muted)]">
@@ -222,33 +241,80 @@ function CountUp({ value, color }: { value: number; color: string }) {
   );
 }
 
-function Countdown({ target }: { target: number }) {
+// Anchors the 24h countback to the first time the screen is opened (stored in
+// localStorage so it survives the periodic auto-reloads). Open /screen?reset to
+// re-arm it at the real start time.
+function useHackathonEnd(): number | null {
+  const [endTs, setEndTs] = useState<number | null>(null);
+  useEffect(() => {
+    const KEY = "hackathon-start-ts";
+    try {
+      const params = new URLSearchParams(window.location.search);
+      let start = Number(localStorage.getItem(KEY));
+      if (params.has("reset") || !start || Number.isNaN(start)) {
+        start = Date.now();
+        localStorage.setItem(KEY, String(start));
+        if (params.has("reset")) {
+          // Drop the query param so the 5-min auto-reload doesn't keep resetting.
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+      }
+      setEndTs(start + HACKATHON_MS);
+    } catch {
+      setEndTs(Date.now() + HACKATHON_MS);
+    }
+  }, []);
+  return endTs;
+}
+
+function Countdown24({ endTs }: { endTs: number | null }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
-  const ms = target - now;
+  if (endTs == null) return null;
+  const ms = endTs - now;
   if (ms <= 0) {
-    return <span className="gradient-text font-semibold">Judging is live</span>;
+    return (
+      <span className="gradient-text font-bold" style={{ fontSize: "clamp(2rem,6vw,4.5rem)" }}>
+        Pencils down — time&apos;s up!
+      </span>
+    );
   }
-  const d = Math.floor(ms / 86_400_000);
-  const h = Math.floor(ms / 3_600_000) % 24;
+  const h = Math.floor(ms / 3_600_000);
   const m = Math.floor(ms / 60_000) % 60;
   const s = Math.floor(ms / 1000) % 60;
   const Unit = ({ v, l }: { v: number; l: string }) => (
     <span className="inline-flex flex-col items-center">
-      <span className="tabular-nums font-bold gradient-text" style={{ fontSize: "clamp(1.6rem,4vw,3rem)" }}>
+      <span
+        className="tabular-nums font-bold gradient-text leading-none"
+        style={{ fontSize: "clamp(3rem,9vw,7rem)" }}
+      >
         {String(v).padStart(2, "0")}
       </span>
-      <span className="text-[color:var(--color-muted)] text-xs uppercase tracking-widest">{l}</span>
+      <span
+        className="mt-1 text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
+        style={{ fontSize: "clamp(0.7rem,1.4vw,1rem)" }}
+      >
+        {l}
+      </span>
+    </span>
+  );
+  const Sep = () => (
+    <span
+      className="font-bold text-[color:var(--color-muted)] leading-none"
+      style={{ fontSize: "clamp(2.5rem,7vw,5.5rem)" }}
+    >
+      :
     </span>
   );
   return (
-    <div className="inline-flex items-end gap-5">
-      <Unit v={d} l="days" />
-      <Unit v={h} l="hrs" />
+    <div className="inline-flex items-start gap-3 sm:gap-5">
+      <Unit v={h} l="hours" />
+      <Sep />
       <Unit v={m} l="min" />
+      <Sep />
       <Unit v={s} l="sec" />
     </div>
   );
@@ -278,7 +344,7 @@ function Ticker({ titles }: { titles: string[] }) {
 
 /* ---------- slides ---------- */
 
-function Welcome({ judgingTs }: { judgingTs: number }) {
+function Welcome({ endTs }: { endTs: number | null }) {
   return (
     <div className="text-center">
       <motion.p
@@ -311,12 +377,12 @@ function Welcome({ judgingTs }: { judgingTs: number }) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
-        className="mt-12 inline-flex flex-col items-center gap-2"
+        className="mt-12 inline-flex flex-col items-center gap-3"
       >
         <span className="text-xs uppercase tracking-[0.25em] text-[color:var(--color-muted)]">
-          Judging in
+          Time remaining
         </span>
-        <Countdown target={judgingTs} />
+        <Countdown24 endTs={endTs} />
       </motion.div>
     </div>
   );

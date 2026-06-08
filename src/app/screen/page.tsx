@@ -1,6 +1,5 @@
 import { db, submissions } from "@/lib/db";
 import { computeStats, bucketByCategory } from "@/lib/insights";
-import { JUDGING_DAY } from "@/lib/dates";
 import { KioskDeck } from "@/components/KioskDeck";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +37,6 @@ export default async function ScreenPage() {
       accepted={stats.accepted}
       buckets={buckets}
       titles={titles}
-      judgingTs={JUDGING_DAY.getTime()}
     />
   );
 }
