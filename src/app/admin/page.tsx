@@ -42,9 +42,14 @@ export default async function AdminPage({
             Accept or reject submissions. Submitters see status update in their dashboard.
           </p>
         </div>
-        <Link href="/ideas/export" className="btn btn-ghost">
-          📄 Export ideas to PDF
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link href="/screen" className="btn btn-ghost" target="_blank">
+            📺 Live screen
+          </Link>
+          <Link href="/ideas/export" className="btn btn-ghost">
+            📄 Export ideas to PDF
+          </Link>
+        </div>
       </header>
 
       <nav className="flex flex-wrap gap-2">
