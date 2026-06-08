@@ -13,8 +13,22 @@ type Props = {
   buckets: Bucket[];
 };
 
-const JUDGES = [
-  { name: "Eyal Fingold", initials: "EF" },
+type Judge = {
+  name: string;
+  initials: string;
+  title?: string;
+  company?: string;
+  photo?: string;
+};
+
+const JUDGES: Judge[] = [
+  {
+    name: "Eyal Fingold",
+    initials: "EF",
+    title: "Co-Founder & CTO",
+    company: "Native",
+    photo: "/judge-photos/eyal-fingold.png",
+  },
   { name: "Tal Shapiro", initials: "TS" },
   { name: "Roy Fintuch", initials: "RF" },
 ];
@@ -230,27 +244,56 @@ function Judges() {
         Meet the judges
       </h2>
       <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
-        {JUDGES.map((j) => (
-          <div key={j.name} className="flex flex-col items-center">
-            <div
-              className="rounded-full flex items-center justify-center font-bold text-[color:var(--color-background)] glow-ring"
-              style={{
-                width: "clamp(6rem,14vw,11rem)",
-                height: "clamp(6rem,14vw,11rem)",
-                fontSize: "clamp(2rem,5vw,4rem)",
-                background: "linear-gradient(135deg, var(--color-accent), var(--color-accent-2) 60%, var(--color-accent-3))",
-              }}
-            >
-              {j.initials}
+        {JUDGES.map((j) => {
+          const dim = "clamp(6rem,14vw,11rem)";
+          return (
+            <div key={j.name} className="flex flex-col items-center">
+              {j.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={j.photo}
+                  alt={j.name}
+                  className="rounded-full object-cover glow-ring"
+                  style={{ width: dim, height: dim }}
+                />
+              ) : (
+                <div
+                  className="rounded-full flex items-center justify-center font-bold text-[color:var(--color-background)] glow-ring"
+                  style={{
+                    width: dim,
+                    height: dim,
+                    fontSize: "clamp(2rem,5vw,4rem)",
+                    background:
+                      "linear-gradient(135deg, var(--color-accent), var(--color-accent-2) 60%, var(--color-accent-3))",
+                  }}
+                >
+                  {j.initials}
+                </div>
+              )}
+              <div className="mt-5 font-semibold" style={{ fontSize: "clamp(1.3rem,3vw,2.2rem)" }}>
+                {j.name}
+              </div>
+              {j.title ? (
+                <>
+                  <div style={{ fontSize: "clamp(1rem,1.9vw,1.5rem)" }}>{j.title}</div>
+                  <div
+                    className="mt-0.5 gradient-text font-semibold"
+                    style={{ fontSize: "clamp(0.95rem,1.7vw,1.35rem)" }}
+                  >
+                    {j.company}
+                  </div>
+                </>
+              ) : (
+                <div
+                  className="mt-1 text-[color:var(--color-muted)]"
+                  style={{ fontSize: "clamp(0.9rem,1.6vw,1.2rem)" }}
+                >
+                  External judge
+                </div>
+              )}
             </div>
-            <div className="mt-5 font-semibold" style={{ fontSize: "clamp(1.3rem,3vw,2.2rem)" }}>
-              {j.name}
-            </div>
-            <div className="mt-1 text-[color:var(--color-muted)]" style={{ fontSize: "clamp(0.9rem,1.6vw,1.2rem)" }}>
-              External judge
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
