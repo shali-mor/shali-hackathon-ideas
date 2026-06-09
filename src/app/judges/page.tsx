@@ -10,6 +10,8 @@ import {
 } from "@/lib/judging";
 import type { JudgeScore } from "@/lib/db/schema";
 import { FilterableIdeas, type IdeaForJudging } from "./FilterableIdeas";
+import { getSession } from "@/lib/session";
+import { isAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -19,23 +21,45 @@ export default async function JudgesPage({
   searchParams: Promise<{ token?: string; view?: string }>;
 }) {
   const { token, view } = await searchParams;
-  const judge = token ? await verifyJudgeToken(token) : null;
 
-  if (!judge || !token) {
+  // Two paths in: a signed link (for external judges) or an admin session.
+  // Token wins if present; otherwise fall back to the signed-in admin.
+  const tokenJudge = token ? await verifyJudgeToken(token) : null;
+  const session = await getSession();
+  const isSignedInAdmin = isAdmin(session?.user?.email);
+  const me =
+    tokenJudge ??
+    (isSignedInAdmin && session?.user?.email
+      ? {
+          name: session.user.name ?? session.user.email,
+          email: session.user.email,
+        }
+      : null);
+
+  if (!me) {
     return (
       <div className="max-w-md mx-auto mt-16 text-center">
         <div className="text-5xl mb-4">🔐</div>
         <h1 className="text-3xl font-bold tracking-tight">Judges only</h1>
         <p className="mt-3 text-sm text-[color:var(--color-muted)]">
-          This page is accessible only via your private link.
+          Open this page with your private judge link, or sign in as an
+          admin.
         </p>
+        <Link href="/auth/signin?callbackUrl=/judges" className="btn btn-primary mt-6">
+          Sign in
+        </Link>
       </div>
     );
   }
 
   const showResults = view === "results";
-  const scoreHref = `/judges?token=${encodeURIComponent(token)}`;
-  const resultsHref = `${scoreHref}&view=results`;
+  // For admins (no token) use a token-less URL; for token-judges keep it on
+  // the URL so refresh + tab links continue to work.
+  const baseHref = token ? `/judges?token=${encodeURIComponent(token)}` : "/judges";
+  const scoreHref = baseHref;
+  const resultsHref = token
+    ? `${baseHref}&view=results`
+    : `${baseHref}?view=results`;
 
   const accepted = await db
     .select()
@@ -55,8 +79,10 @@ export default async function JudgesPage({
           </p>
         </div>
         <div className="text-right">
-          <div className="text-xs text-[color:var(--color-muted)]">Judge</div>
-          <div className="text-sm">{judge.name}</div>
+          <div className="text-xs text-[color:var(--color-muted)]">
+            {tokenJudge ? "Judge" : "Admin"}
+          </div>
+          <div className="text-sm">{me.name}</div>
         </div>
       </header>
 
@@ -68,7 +94,7 @@ export default async function JudgesPage({
       {showResults ? (
         <Leaderboard accepted={accepted} />
       ) : (
-        <ScoringList token={token} judgeEmail={judge.email} accepted={accepted} />
+        <ScoringList token={token ?? ""} judgeEmail={me.email} accepted={accepted} />
       )}
     </div>
   );
