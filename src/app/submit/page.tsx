@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import {
   submissionsOpen,
+  submissionsOpenFor,
+  lateSubmitterGraceFor,
   SUBMISSION_DEADLINE,
   formatInTZ,
 } from "@/lib/dates";
@@ -14,7 +16,9 @@ export default async function SubmitPage() {
   if (!session?.user) {
     redirect("/auth/signin?callbackUrl=/submit");
   }
-  const open = submissionsOpen();
+  const open = submissionsOpenFor(session.user.email);
+  const grace =
+    !submissionsOpen() && open ? lateSubmitterGraceFor(session.user.email) : null;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -39,12 +43,34 @@ export default async function SubmitPage() {
           <p className="text-[color:var(--color-muted)]">Submissions are closed.</p>
         </div>
       ) : (
-        <SubmissionForm
-          action={createSubmission}
-          submitter={session.user.name ?? session.user.email ?? undefined}
-          submitLabel="Submit idea"
-          celebrate
-        />
+        <>
+          {grace && (
+            <div className="mb-6 card border-[color:var(--color-warn)]/40 bg-[color:var(--color-warn)]/10">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl leading-none" aria-hidden>⏳</span>
+                <div className="text-sm">
+                  <div className="font-semibold text-[color:var(--color-warn)]">
+                    Late-submission grace window
+                  </div>
+                  <p className="mt-1 text-[color:var(--color-muted)]">
+                    The public deadline has passed, but you have a one-time
+                    extension until{" "}
+                    <span className="text-[color:var(--color-foreground)]">
+                      {formatInTZ(grace)}
+                    </span>{" "}
+                    (Asia/Jerusalem). Submit your remaining idea before then.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          <SubmissionForm
+            action={createSubmission}
+            submitter={session.user.name ?? session.user.email ?? undefined}
+            submitLabel="Submit idea"
+            celebrate
+          />
+        </>
       )}
     </div>
   );

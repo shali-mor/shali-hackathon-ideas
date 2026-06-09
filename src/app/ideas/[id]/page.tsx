@@ -5,7 +5,7 @@ import { db, submissions } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
 import { isAdmin } from "@/lib/admin";
-import { submissionsOpen } from "@/lib/dates";
+import { submissionsOpenFor } from "@/lib/dates";
 import { categoryDisplay } from "@/lib/insights";
 import { JoinTeamButton } from "./JoinTeamButton";
 
@@ -79,7 +79,7 @@ export default async function IdeaDetailPage({
             {idea.developers.length} / 3
           </span>
         </div>
-        {idea.teamNeeded && submissionsOpen() && (
+        {idea.teamNeeded && submissionsOpenFor(session?.user?.email) && (
           <>
             <p className="mt-3 text-sm text-[color:var(--color-muted)]">
               <span className="text-[color:var(--color-accent-2)]">
@@ -140,7 +140,7 @@ export default async function IdeaDetailPage({
         </div>
       )}
 
-      {isOwner && submissionsOpen() && (
+      {isOwner && submissionsOpenFor(session?.user?.email) && (
         <div className="pt-4 border-t border-[color:var(--color-border)]">
           <Link href={`/my-submissions/${idea.id}/edit`} className="btn btn-ghost">
             Edit submission

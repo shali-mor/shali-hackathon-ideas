@@ -6,7 +6,7 @@ import { eq, and, gte, count } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db, submissions } from "@/lib/db";
 import { parseSubmissionForm } from "@/lib/submissions";
-import { submissionsOpen } from "@/lib/dates";
+import { submissionsOpenFor } from "@/lib/dates";
 import { isAllowedEmail } from "@/lib/admin";
 
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
@@ -25,7 +25,7 @@ export async function createSubmission(
   if (!session?.user?.email || !isAllowedEmail(session.user.email)) {
     return { ok: false, error: "You must sign in with a Forcepoint email." };
   }
-  if (!submissionsOpen()) {
+  if (!submissionsOpenFor(session.user.email)) {
     return { ok: false, error: "Submissions are closed." };
   }
 
@@ -86,7 +86,7 @@ export async function updateSubmission(
   if (!session?.user?.email) {
     return { ok: false, error: "Not signed in." };
   }
-  if (!submissionsOpen()) {
+  if (!submissionsOpenFor(session.user.email)) {
     return { ok: false, error: "Submissions are closed; edits are locked." };
   }
 
@@ -141,7 +141,7 @@ export async function joinTeam(
   if (!session?.user?.email || !isAllowedEmail(session.user.email)) {
     return { ok: false, error: "Sign in with a Forcepoint email to join." };
   }
-  if (!submissionsOpen()) {
+  if (!submissionsOpenFor(session.user.email)) {
     return { ok: false, error: "Submissions are closed." };
   }
 
@@ -186,7 +186,7 @@ export async function joinTeam(
 export async function deleteSubmission(id: string): Promise<void> {
   const session = await getSession();
   if (!session?.user?.email) throw new Error("Not signed in.");
-  if (!submissionsOpen()) {
+  if (!submissionsOpenFor(session.user.email)) {
     throw new Error("Submissions are closed; deletes are locked.");
   }
 
