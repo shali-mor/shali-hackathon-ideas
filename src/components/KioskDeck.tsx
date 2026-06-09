@@ -46,7 +46,7 @@ const JUDGES: Judge[] = [
     photo: "/judge-photos/tal-shapiro.png",
   },
   {
-    name: "Roy Fintuch",
+    name: "Roy Feintuch",
     initials: "RF",
     title: "Advisor & Investor",
     company: "Ex Founder & CTO · Dome9 ($200M exit)",
