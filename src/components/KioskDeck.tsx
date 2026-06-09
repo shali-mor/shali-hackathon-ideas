@@ -1,8 +1,16 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { CRITERIA } from "@/lib/judging";
+import { HACKATHON_END } from "@/lib/dates";
+
+// The wireframe orb (three.js) — client-only, same component the home hero uses.
+const Hero3D = dynamic(() => import("./Hero3D").then((m) => m.Hero3D), {
+  ssr: false,
+  loading: () => null,
+});
 
 type Bucket = { label: string; icon: string; count: number };
 
@@ -20,7 +28,6 @@ type Props = {
   accepted: number;
   buckets: Bucket[];
   titles: string[];
-  judgingTs: number;
 };
 
 const JUDGES: Judge[] = [
@@ -56,10 +63,10 @@ export function KioskDeck({
   accepted,
   buckets,
   titles,
-  judgingTs,
 }: Props) {
+  const endTs = useHackathonEnd();
   const slides: { key: string; node: ReactNode }[] = [
-    { key: "welcome", node: <Welcome judgingTs={judgingTs} /> },
+    { key: "welcome", node: <Welcome endTs={endTs} /> },
     {
       key: "numbers",
       node: <Numbers participants={participants} ideas={ideas} accepted={accepted} />,
@@ -114,20 +121,46 @@ export function KioskDeck({
         <span className="tabular-nums">{clock}</span>
       </div>
 
-      {/* slide */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center px-12">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={slides[i].key}
-            initial={{ opacity: 0, y: 28, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -28, scale: 0.98 }}
-            transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
-            className="w-full max-w-6xl"
-          >
-            {slides[i].node}
-          </motion.div>
-        </AnimatePresence>
+      {/* slide — welcome uses a 2-column hero (text + orb); all other
+          slides use a single centered column. The orb stays mounted
+          either way (display:none on non-welcome) so the WebGL canvas
+          isn't re-initialised every time we return to slide 1. */}
+      <div className="absolute inset-0 z-10 flex items-center justify-center px-12 py-20">
+        {(() => {
+          const isWelcome = slides[i].key === "welcome";
+          return (
+            <div
+              className={
+                isWelcome
+                  ? "grid w-full max-w-6xl items-center gap-12 lg:gap-20 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto]"
+                  : "w-full max-w-6xl"
+              }
+            >
+              <div className="relative min-w-0">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={slides[i].key}
+                    initial={{ opacity: 0, y: 28, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -28, scale: 0.98 }}
+                    transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+                  >
+                    {slides[i].node}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div
+                aria-hidden
+                className={`pointer-events-none mx-auto aspect-square w-[min(34vh,340px)] opacity-85 ${
+                  isWelcome ? "block" : "hidden"
+                }`}
+              >
+                <Hero3D />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* progress dots */}
@@ -222,33 +255,62 @@ function CountUp({ value, color }: { value: number; color: string }) {
   );
 }
 
-function Countdown({ target }: { target: number }) {
-  const [now, setNow] = useState(() => Date.now());
+// "Time remaining" counts down to HACKATHON_END (pencils-down).
+function useHackathonEnd(): number | null {
+  return HACKATHON_END.getTime();
+}
+
+function Countdown24({ endTs }: { endTs: number | null }) {
+  // Initialise `now` on the client only — Date.now() at render time would
+  // differ between SSR and hydration and trigger a mismatch.
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
+    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
-  const ms = target - now;
+  if (endTs == null || now == null) return null;
+  const ms = endTs - now;
   if (ms <= 0) {
-    return <span className="gradient-text font-semibold">Judging is live</span>;
+    return (
+      <span className="gradient-text font-bold" style={{ fontSize: "clamp(2rem,6vw,4.5rem)" }}>
+        Pencils down — time&apos;s up!
+      </span>
+    );
   }
-  const d = Math.floor(ms / 86_400_000);
-  const h = Math.floor(ms / 3_600_000) % 24;
+  const h = Math.floor(ms / 3_600_000);
   const m = Math.floor(ms / 60_000) % 60;
   const s = Math.floor(ms / 1000) % 60;
   const Unit = ({ v, l }: { v: number; l: string }) => (
     <span className="inline-flex flex-col items-center">
-      <span className="tabular-nums font-bold gradient-text" style={{ fontSize: "clamp(1.6rem,4vw,3rem)" }}>
+      <span
+        className="tabular-nums font-bold gradient-text leading-none"
+        style={{ fontSize: "clamp(3rem,9vw,7rem)" }}
+      >
         {String(v).padStart(2, "0")}
       </span>
-      <span className="text-[color:var(--color-muted)] text-xs uppercase tracking-widest">{l}</span>
+      <span
+        className="mt-1 text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
+        style={{ fontSize: "clamp(0.7rem,1.4vw,1rem)" }}
+      >
+        {l}
+      </span>
+    </span>
+  );
+  const Sep = () => (
+    <span
+      className="font-bold text-[color:var(--color-muted)] leading-none"
+      style={{ fontSize: "clamp(2.5rem,7vw,5.5rem)" }}
+    >
+      :
     </span>
   );
   return (
-    <div className="inline-flex items-end gap-5">
-      <Unit v={d} l="days" />
-      <Unit v={h} l="hrs" />
+    <div className="inline-flex items-start gap-3 sm:gap-5">
+      <Unit v={h} l="hours" />
+      <Sep />
       <Unit v={m} l="min" />
+      <Sep />
       <Unit v={s} l="sec" />
     </div>
   );
@@ -278,7 +340,7 @@ function Ticker({ titles }: { titles: string[] }) {
 
 /* ---------- slides ---------- */
 
-function Welcome({ judgingTs }: { judgingTs: number }) {
+function Welcome({ endTs }: { endTs: number | null }) {
   return (
     <div className="text-center">
       <motion.p
@@ -294,7 +356,7 @@ function Welcome({ judgingTs }: { judgingTs: number }) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }}
         className="mt-4 font-bold tracking-tight leading-[0.95] gradient-text"
-        style={{ fontSize: "clamp(3rem, 12vw, 11rem)" }}
+        style={{ fontSize: "clamp(2.5rem, 8.5vw, 9rem)" }}
       >
         Hackathon
       </motion.h1>
@@ -311,12 +373,12 @@ function Welcome({ judgingTs }: { judgingTs: number }) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
-        className="mt-12 inline-flex flex-col items-center gap-2"
+        className="mt-12 inline-flex flex-col items-center gap-3"
       >
         <span className="text-xs uppercase tracking-[0.25em] text-[color:var(--color-muted)]">
-          Judging in
+          Time remaining
         </span>
-        <Countdown target={judgingTs} />
+        <Countdown24 endTs={endTs} />
       </motion.div>
     </div>
   );
@@ -370,49 +432,110 @@ function Numbers({
 
 function Sdlc({ buckets }: { buckets: Bucket[] }) {
   const max = Math.max(1, ...buckets.map((b) => b.count));
+  const total = buckets.reduce((s, b) => s + b.count, 0);
+  const topCount = Math.max(...buckets.map((b) => b.count));
+
   return (
     <div>
-      <h2
-        className="text-center text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
-        style={{ fontSize: "clamp(1rem,2.5vw,1.6rem)" }}
-      >
-        Ideas by SDLC stage
-      </h2>
-      <div className="mt-10 space-y-4">
-        {buckets.map((b, idx) => (
-          <motion.div
-            key={b.label}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="flex items-center gap-5"
-          >
-            <div
-              className="w-72 shrink-0 flex items-center gap-3"
-              style={{ fontSize: "clamp(1rem,2vw,1.6rem)" }}
+      <div className="text-center">
+        <h2
+          className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
+          style={{ fontSize: "clamp(0.85rem,1.6vw,1.2rem)" }}
+        >
+          Ideas by SDLC stage
+        </h2>
+        <p
+          className="mt-2 text-[color:var(--color-foreground)]/85"
+          style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}
+        >
+          <span className="font-bold gradient-text tabular-nums">{total}</span>{" "}
+          ideas across the lifecycle
+        </p>
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+        {buckets.map((b, idx) => {
+          const pct = (b.count / max) * 100;
+          const isTop = b.count === topCount && b.count > 0;
+          return (
+            <motion.div
+              key={b.label}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.08, ease: [0.2, 0.8, 0.2, 1] }}
+              className={`relative card overflow-hidden ${
+                isTop ? "glow-ring" : ""
+              }`}
             >
-              <span>{b.icon}</span>
-              <span className="truncate">{b.label}</span>
-            </div>
-            <div className="flex-1 h-6 rounded-full bg-[color:var(--color-surface-2)] overflow-hidden">
+              {/* glow fill — width tracks the count */}
               <motion.div
-                className="h-full rounded-full"
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 left-0"
                 initial={{ width: 0 }}
-                animate={{ width: `${(b.count / max) * 100}%` }}
-                transition={{ delay: 0.2 + idx * 0.1, duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
+                animate={{ width: `${pct}%` }}
+                transition={{
+                  delay: 0.2 + idx * 0.08,
+                  duration: 1,
+                  ease: [0.2, 0.8, 0.2, 1],
+                }}
                 style={{
-                  background: "linear-gradient(to right, var(--color-accent-2), var(--color-accent))",
+                  background:
+                    "linear-gradient(90deg, color-mix(in oklab, var(--color-accent-2) 28%, transparent), color-mix(in oklab, var(--color-accent-2) 6%, transparent) 65%, transparent)",
                 }}
               />
-            </div>
-            <div
-              className="w-12 text-right tabular-nums font-semibold"
-              style={{ fontSize: "clamp(1.2rem,2.5vw,2rem)" }}
-            >
-              {b.count}
-            </div>
-          </motion.div>
-        ))}
+
+              {isTop && (
+                <span className="absolute top-3 right-3 pill border border-[color:var(--color-success)]/45 bg-[color:var(--color-success)]/12 text-[color:var(--color-success)] text-[10px] tracking-[0.18em] uppercase">
+                  Leading
+                </span>
+              )}
+
+              <div className="relative flex items-start gap-3 pr-16">
+                <span className="text-4xl leading-none shrink-0" aria-hidden>
+                  {b.icon}
+                </span>
+                <span
+                  className="font-semibold tracking-tight leading-tight"
+                  style={{ fontSize: "clamp(1rem,1.5vw,1.3rem)" }}
+                >
+                  {b.label}
+                </span>
+              </div>
+
+              <div className="relative mt-6 flex items-end gap-3">
+                <span
+                  className="font-bold tabular-nums gradient-text leading-none"
+                  style={{ fontSize: "clamp(2.8rem,5vw,4.5rem)" }}
+                >
+                  {b.count}
+                </span>
+                <span
+                  className="mb-2 text-[color:var(--color-muted)] uppercase tracking-[0.18em]"
+                  style={{ fontSize: "clamp(0.7rem,1vw,0.85rem)" }}
+                >
+                  {b.count === 1 ? "idea" : "ideas"}
+                </span>
+              </div>
+
+              <div className="relative mt-4 h-[3px] rounded-full bg-[color:var(--color-surface-2)] overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{
+                    delay: 0.3 + idx * 0.08,
+                    duration: 1.2,
+                    ease: [0.2, 0.8, 0.2, 1],
+                  }}
+                  style={{
+                    background:
+                      "linear-gradient(to right, var(--color-accent-2), var(--color-accent))",
+                  }}
+                />
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
@@ -495,41 +618,160 @@ function Judges() {
 }
 
 function Criteria() {
+  const ICONS: Record<string, string> = {
+    impact: "🎯",
+    demo: "⚡",
+    pitch: "🎤",
+    adoptability: "🚀",
+  };
+  const topWeight = Math.max(...CRITERIA.map((c) => c.weight));
+
   return (
     <div>
-      <h2
-        className="text-center text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
-        style={{ fontSize: "clamp(1rem,2.5vw,1.6rem)" }}
-      >
-        How it&apos;s judged
-      </h2>
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {CRITERIA.map((c, idx) => (
-          <motion.div
-            key={c.key}
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 + idx * 0.12, ease: "easeOut" }}
-            className="card flex items-baseline gap-4"
-          >
-            <span
-              className="font-bold tabular-nums gradient-text"
-              style={{ fontSize: "clamp(1.6rem,4vw,3rem)" }}
-            >
-              {Math.round(c.weight * 100)}%
-            </span>
-            <span className="font-semibold" style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}>
-              {c.label}
-            </span>
-          </motion.div>
-        ))}
+      <div className="text-center">
+        <h2
+          className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
+          style={{ fontSize: "clamp(0.85rem,1.6vw,1.2rem)" }}
+        >
+          How it&apos;s judged
+        </h2>
+        <p
+          className="mt-2 text-[color:var(--color-foreground)]/85"
+          style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}
+        >
+          Four signals, weighted to{" "}
+          <span className="font-bold gradient-text tabular-nums">100</span>
+        </p>
       </div>
-      <p
-        className="mt-10 text-center text-[color:var(--color-muted)]"
-        style={{ fontSize: "clamp(1rem,2vw,1.5rem)" }}
+
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
+        {CRITERIA.map((c, idx) => {
+          const pct = Math.round(c.weight * 100);
+          const isTop = c.weight === topWeight;
+          const gradId = `critGrad-${c.key}`;
+          const R = 42;
+          const C = 2 * Math.PI * R;
+          return (
+            <motion.div
+              key={c.key}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1, ease: [0.2, 0.8, 0.2, 1] }}
+              className={`card relative overflow-hidden flex items-center gap-4 lg:gap-6 ${
+                isTop ? "glow-ring" : ""
+              }`}
+            >
+              {/* ambient gradient wash, weighted by the criterion */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -z-10"
+                style={{
+                  background:
+                    "radial-gradient(circle at 0% 50%, color-mix(in oklab, var(--color-accent-2) 14%, transparent), transparent 65%)",
+                }}
+              />
+
+              {/* circular progress ring + % in center */}
+              <div
+                className="relative shrink-0"
+                style={{
+                  width: "clamp(88px, 11vw, 130px)",
+                  height: "clamp(88px, 11vw, 130px)",
+                }}
+              >
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <defs>
+                    <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="var(--color-accent-2)" />
+                      <stop offset="100%" stopColor="var(--color-accent)" />
+                    </linearGradient>
+                  </defs>
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={R}
+                    fill="none"
+                    stroke="color-mix(in oklab, white 10%, transparent)"
+                    strokeWidth="7"
+                  />
+                  <motion.circle
+                    cx="50"
+                    cy="50"
+                    r={R}
+                    fill="none"
+                    stroke={`url(#${gradId})`}
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    strokeDasharray={C}
+                    initial={{ strokeDashoffset: C }}
+                    animate={{ strokeDashoffset: C * (1 - c.weight) }}
+                    transition={{
+                      delay: 0.25 + idx * 0.1,
+                      duration: 1.2,
+                      ease: [0.2, 0.8, 0.2, 1],
+                    }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span
+                    className="font-bold tabular-nums gradient-text leading-none"
+                    style={{ fontSize: "clamp(1.4rem,2.2vw,2rem)" }}
+                  >
+                    {pct}
+                    <span style={{ fontSize: "0.55em", marginLeft: "0.05em" }}>
+                      %
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* label + blurb */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-2xl leading-none" aria-hidden>
+                    {ICONS[c.key]}
+                  </span>
+                  <h3
+                    className="font-semibold tracking-tight"
+                    style={{ fontSize: "clamp(1.05rem,1.6vw,1.4rem)" }}
+                  >
+                    {c.label}
+                  </h3>
+                  {isTop && (
+                    <span
+                      className="pill border border-[color:var(--color-accent-2)]/50 bg-[color:var(--color-accent-2)]/15 text-[color:var(--color-accent-2)] uppercase tracking-[0.18em]"
+                      style={{ fontSize: "clamp(0.6rem,0.85vw,0.75rem)" }}
+                    >
+                      Top weight
+                    </span>
+                  )}
+                </div>
+                <p
+                  className="mt-2 text-[color:var(--color-muted)] leading-snug line-clamp-2"
+                  style={{ fontSize: "clamp(0.82rem,1.1vw,1rem)" }}
+                >
+                  {c.blurb}
+                </p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
+        className="mt-8 flex items-center justify-center gap-2.5"
       >
-        Demos &amp; judging — Thursday, June 11
-      </p>
+        <span className="dot-live" />
+        <span
+          className="pill border border-[color:var(--color-accent)]/45 bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] uppercase tracking-[0.2em]"
+          style={{ fontSize: "clamp(0.78rem,1.2vw,1rem)" }}
+        >
+          Demos &amp; judging — Thursday, June 11
+        </span>
+      </motion.div>
     </div>
   );
 }
