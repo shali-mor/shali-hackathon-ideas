@@ -122,38 +122,46 @@ export function KioskDeck({
         <span className="tabular-nums">{clock}</span>
       </div>
 
-      {/* slide — 2-column hero grid: content on the left, orb on the right.
-          The orb lives as a sibling of <AnimatePresence>, so it never
-          remounts (no Canvas re-init) when the slide cycles. */}
+      {/* slide — welcome uses a 2-column hero (text + orb); all other
+          slides use a single centered column. The orb stays mounted
+          either way (display:none on non-welcome) so the WebGL canvas
+          isn't re-initialised every time we return to slide 1. */}
       <div className="absolute inset-0 z-10 flex items-center justify-center px-12 py-20">
-        <div className="grid w-full max-w-7xl items-center gap-10 lg:gap-16 grid-cols-1 lg:grid-cols-[1.4fr_1fr]">
-          <div className="relative min-w-0">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={slides[i].key}
-                initial={{ opacity: 0, y: 28, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -28, scale: 0.98 }}
-                transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
-              >
-                {slides[i].node}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+        {(() => {
+          const isWelcome = slides[i].key === "welcome";
+          return (
+            <div
+              className={
+                isWelcome
+                  ? "grid w-full max-w-6xl items-center gap-12 lg:gap-20 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto]"
+                  : "w-full max-w-6xl"
+              }
+            >
+              <div className="relative min-w-0">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={slides[i].key}
+                    initial={{ opacity: 0, y: 28, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -28, scale: 0.98 }}
+                    transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+                  >
+                    {slides[i].node}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
 
-          <motion.div
-            aria-hidden
-            className="pointer-events-none relative mx-auto aspect-square w-full max-w-[420px]"
-            initial={false}
-            animate={{
-              opacity: slides[i].key === "welcome" ? 0.85 : 0.55,
-              scale: slides[i].key === "welcome" ? 1 : 0.85,
-            }}
-            transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
-          >
-            <Hero3D />
-          </motion.div>
-        </div>
+              <div
+                aria-hidden
+                className={`pointer-events-none mx-auto aspect-square w-[min(34vh,340px)] opacity-85 ${
+                  isWelcome ? "block" : "hidden"
+                }`}
+              >
+                <Hero3D />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* progress dots */}
