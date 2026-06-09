@@ -68,12 +68,20 @@ export default async function RootLayout({
                 Insights
               </Link>
               {session && admin && (
-                <Link
-                  href="/admin"
-                  className="text-sm text-[color:var(--color-accent)] hover:brightness-110"
-                >
-                  ⚡ Admin
-                </Link>
+                <>
+                  <Link
+                    href="/admin"
+                    className="text-sm text-[color:var(--color-accent)] hover:brightness-110"
+                  >
+                    ⚡ Admin
+                  </Link>
+                  <Link
+                    href="/judges"
+                    className="text-sm text-[color:var(--color-accent-2)] hover:brightness-110"
+                  >
+                    🏆 Judging
+                  </Link>
+                </>
               )}
             </nav>
 
