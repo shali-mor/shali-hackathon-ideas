@@ -12,6 +12,32 @@ export function submissionsOpen(now: Date = new Date()): boolean {
   return now.getTime() <= SUBMISSION_DEADLINE.getTime();
 }
 
+// Per-email grace window for late submissions/edits. The global
+// SUBMISSION_DEADLINE has passed, but a handful of submitters were
+// missed and need a tail window. Keys are lowercase emails; values are
+// the expiry. Remove entries once they lapse.
+export const LATE_SUBMITTER_GRACE: Record<string, Date> = {
+  "benny.zemmour@forcepoint.com": fromZonedTime("2026-06-09 16:30:00", TZ),
+};
+
+export function submissionsOpenFor(
+  email: string | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (submissionsOpen(now)) return true;
+  if (!email) return false;
+  const grace = LATE_SUBMITTER_GRACE[email.toLowerCase()];
+  if (!grace) return false;
+  return now.getTime() <= grace.getTime();
+}
+
+export function lateSubmitterGraceFor(
+  email: string | null | undefined,
+): Date | null {
+  if (!email) return null;
+  return LATE_SUBMITTER_GRACE[email.toLowerCase()] ?? null;
+}
+
 export function formatInTZ(date: Date): string {
   const zoned = toZonedTime(date, TZ);
   return zoned.toLocaleString("en-GB", {

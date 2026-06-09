@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db, submissions } from "@/lib/db";
-import { submissionsOpen } from "@/lib/dates";
+import { submissionsOpenFor } from "@/lib/dates";
 import { SubmissionForm } from "@/app/submit/SubmissionForm";
 import { updateSubmission, deleteSubmission } from "@/app/submit/actions";
 
@@ -22,7 +22,7 @@ export default async function EditSubmissionPage({
   if (idea.submittedByEmail.toLowerCase() !== session.user.email.toLowerCase()) {
     redirect("/my-submissions");
   }
-  if (!submissionsOpen()) {
+  if (!submissionsOpenFor(session.user.email)) {
     redirect(`/ideas/${id}`);
   }
 
