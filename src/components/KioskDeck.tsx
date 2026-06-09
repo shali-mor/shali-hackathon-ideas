@@ -112,8 +112,11 @@ export function KioskDeck({
       <AnimatedBackdrop />
 
       {/* top bar */}
-      <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-10 py-6 text-sm text-[color:var(--color-muted)]">
-        <span className="flex items-center gap-2.5">
+      <div
+        className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-[3vw] py-5 text-[color:var(--color-muted)]"
+        style={{ fontSize: "clamp(0.85rem,1.1vw,1.25rem)" }}
+      >
+        <span className="flex items-center gap-3">
           <span className="dot-live" />
           <span className="font-semibold tracking-tight">
             <span className="gradient-text">hack</span>.fp
@@ -125,16 +128,18 @@ export function KioskDeck({
       {/* slide — welcome uses a 2-column hero (text + orb); all other
           slides use a single centered column. The orb stays mounted
           either way (display:none on non-welcome) so the WebGL canvas
-          isn't re-initialised every time we return to slide 1. */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center px-12 py-20">
+          isn't re-initialised every time we return to slide 1.
+          Sizing targets a 1920x1080 TV: content fills ~92vw with a
+          1800px cap, with ~64px outer padding inside the TV safe area. */}
+      <div className="absolute inset-0 z-10 flex items-center justify-center px-[4vw] py-[6vh]">
         {(() => {
           const isWelcome = slides[i].key === "welcome";
           return (
             <div
               className={
                 isWelcome
-                  ? "grid w-full max-w-6xl items-center gap-12 lg:gap-20 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto]"
-                  : "w-full max-w-6xl"
+                  ? "grid w-full max-w-[1800px] items-center gap-[5vw] grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto]"
+                  : "w-full max-w-[1800px]"
               }
             >
               <div className="relative min-w-0">
@@ -153,7 +158,7 @@ export function KioskDeck({
 
               <div
                 aria-hidden
-                className={`pointer-events-none mx-auto aspect-square w-[min(34vh,340px)] opacity-85 ${
+                className={`pointer-events-none mx-auto aspect-square w-[min(40vh,460px)] opacity-85 ${
                   isWelcome ? "block" : "hidden"
                 }`}
               >
@@ -164,14 +169,15 @@ export function KioskDeck({
         })()}
       </div>
 
-      {/* progress dots */}
-      <div className="absolute bottom-16 inset-x-0 z-10 flex items-center justify-center gap-2.5">
+      {/* progress dots — sits just above the ticker */}
+      <div className="absolute bottom-[6vh] inset-x-0 z-10 flex items-center justify-center gap-3">
         {slides.map((s, n) => (
           <span
             key={s.key}
-            className="h-2 rounded-full transition-all duration-500"
+            className="rounded-full transition-all duration-500"
             style={{
-              width: n === i ? "2.5rem" : "0.5rem",
+              height: "clamp(0.4rem,0.55vh,0.6rem)",
+              width: n === i ? "clamp(2.5rem,3.5vw,4.5rem)" : "clamp(0.5rem,0.7vw,0.85rem)",
               background:
                 n === i ? "var(--color-accent-2)" : "color-mix(in oklab, white 18%, transparent)",
             }}
@@ -286,13 +292,13 @@ function Countdown24({ endTs }: { endTs: number | null }) {
     <span className="inline-flex flex-col items-center">
       <span
         className="tabular-nums font-bold gradient-text leading-none"
-        style={{ fontSize: "clamp(3rem,9vw,7rem)" }}
+        style={{ fontSize: "clamp(3.5rem,10vw,11rem)" }}
       >
         {String(v).padStart(2, "0")}
       </span>
       <span
-        className="mt-1 text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
-        style={{ fontSize: "clamp(0.7rem,1.4vw,1rem)" }}
+        className="mt-2 text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
+        style={{ fontSize: "clamp(0.8rem,1.4vw,1.4rem)" }}
       >
         {l}
       </span>
@@ -301,7 +307,7 @@ function Countdown24({ endTs }: { endTs: number | null }) {
   const Sep = () => (
     <span
       className="font-bold text-[color:var(--color-muted)] leading-none"
-      style={{ fontSize: "clamp(2.5rem,7vw,5.5rem)" }}
+      style={{ fontSize: "clamp(3rem,8vw,8rem)" }}
     >
       :
     </span>
@@ -322,15 +328,22 @@ function Ticker({ titles }: { titles: string[] }) {
   const items = [...titles, ...titles];
   const duration = Math.max(24, titles.length * 4.5);
   return (
-    <div className="absolute bottom-0 inset-x-0 z-10 h-12 flex items-center overflow-hidden border-t border-[color:var(--color-border)] bg-[color:var(--color-background)]/60 backdrop-blur-sm">
+    <div
+      className="absolute bottom-0 inset-x-0 z-10 flex items-center overflow-hidden border-t border-[color:var(--color-border)] bg-[color:var(--color-background)]/60 backdrop-blur-sm"
+      style={{ height: "clamp(2.75rem,4.2vh,4.2rem)" }}
+    >
       <motion.div
         className="flex shrink-0 items-center whitespace-nowrap"
         animate={{ x: ["0%", "-50%"] }}
         transition={{ duration, ease: "linear", repeat: Infinity }}
       >
         {items.map((t, idx) => (
-          <span key={idx} className="flex items-center text-sm text-[color:var(--color-muted)]">
-            <span className="mx-5 text-[color:var(--color-accent-2)]">◆</span>
+          <span
+            key={idx}
+            className="flex items-center text-[color:var(--color-muted)]"
+            style={{ fontSize: "clamp(0.95rem,1.25vw,1.4rem)" }}
+          >
+            <span className="mx-7 text-[color:var(--color-accent-2)]">◆</span>
             <span className="font-medium text-[color:var(--color-foreground)]/90">{t}</span>
           </span>
         ))}
@@ -348,7 +361,8 @@ function Welcome({ endTs }: { endTs: number | null }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="text-lg sm:text-2xl text-[color:var(--color-muted)] tracking-[0.3em] uppercase"
+        className="text-[color:var(--color-muted)] tracking-[0.3em] uppercase"
+        style={{ fontSize: "clamp(1rem,2vw,1.8rem)" }}
       >
         Forcepoint
       </motion.p>
@@ -356,8 +370,8 @@ function Welcome({ endTs }: { endTs: number | null }) {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }}
-        className="mt-4 font-bold tracking-tight leading-[0.95] gradient-text"
-        style={{ fontSize: "clamp(2.5rem, 8.5vw, 9rem)" }}
+        className="mt-5 font-bold tracking-tight leading-[0.95] gradient-text"
+        style={{ fontSize: "clamp(3rem, 9vw, 12rem)" }}
       >
         Hackathon
       </motion.h1>
@@ -365,8 +379,8 @@ function Welcome({ endTs }: { endTs: number | null }) {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
-        className="mt-8 text-[color:var(--color-muted)]"
-        style={{ fontSize: "clamp(1.2rem,3vw,2.2rem)" }}
+        className="mt-10 text-[color:var(--color-muted)]"
+        style={{ fontSize: "clamp(1.4rem,2.6vw,3rem)" }}
       >
         Build. Ship. Pitch. · June 9, 2026
       </motion.p>
@@ -376,7 +390,10 @@ function Welcome({ endTs }: { endTs: number | null }) {
         transition={{ delay: 0.45 }}
         className="mt-12 inline-flex flex-col items-center gap-3"
       >
-        <span className="text-xs uppercase tracking-[0.25em] text-[color:var(--color-muted)]">
+        <span
+          className="uppercase tracking-[0.25em] text-[color:var(--color-muted)]"
+          style={{ fontSize: "clamp(0.75rem,1.2vw,1.1rem)" }}
+        >
           Time remaining
         </span>
         <Countdown24 endTs={endTs} />
@@ -393,7 +410,7 @@ function SlackInfo() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.05 }}
         className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
-        style={{ fontSize: "clamp(0.85rem,1.6vw,1.2rem)" }}
+        style={{ fontSize: "clamp(1rem,1.6vw,1.6rem)" }}
       >
         Join the conversation
       </motion.h2>
@@ -402,12 +419,12 @@ function SlackInfo() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, ease: [0.2, 0.8, 0.2, 1] }}
-        className="mt-6 flex items-center justify-center gap-4 flex-wrap"
+        className="mt-8 flex items-center justify-center gap-5 flex-wrap"
       >
         <SlackMark />
         <h1
           className="font-bold tracking-tight gradient-text leading-none"
-          style={{ fontSize: "clamp(2rem,6.5vw,5rem)" }}
+          style={{ fontSize: "clamp(2.4rem,7vw,7rem)" }}
         >
           #sdlc-hackathon
         </h1>
@@ -417,8 +434,8 @@ function SlackInfo() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35 }}
-        className="mt-8 text-[color:var(--color-foreground)]/85"
-        style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}
+        className="mt-10 text-[color:var(--color-foreground)]/85"
+        style={{ fontSize: "clamp(1.3rem,2.3vw,2.6rem)" }}
       >
         Slack channel — <span className="font-semibold">free to join</span>, open to everyone.
       </motion.p>
@@ -450,12 +467,12 @@ function SlackInfo() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.75 }}
-        className="mt-8 flex items-center justify-center gap-2.5"
+        className="mt-10 flex items-center justify-center gap-3"
       >
         <span className="dot-live" />
         <span
           className="pill border border-[color:var(--color-accent)]/45 bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] uppercase tracking-[0.2em]"
-          style={{ fontSize: "clamp(0.78rem,1.2vw,1rem)" }}
+          style={{ fontSize: "clamp(0.9rem,1.3vw,1.4rem)" }}
         >
           Live throughout the hackathon
         </span>
@@ -467,17 +484,24 @@ function SlackInfo() {
 function SlackPanel({ icon, title, body }: { icon: string; title: string; body: string }) {
   return (
     <div className="card text-left">
-      <div className="flex items-center gap-2.5">
-        <span className="text-2xl" aria-hidden>
+      <div className="flex items-center gap-3">
+        <span
+          className="leading-none"
+          style={{ fontSize: "clamp(1.8rem,2.4vw,2.8rem)" }}
+          aria-hidden
+        >
           {icon}
         </span>
-        <h3 className="font-semibold tracking-tight" style={{ fontSize: "clamp(1rem,1.4vw,1.2rem)" }}>
+        <h3
+          className="font-semibold tracking-tight"
+          style={{ fontSize: "clamp(1.1rem,1.5vw,1.8rem)" }}
+        >
           {title}
         </h3>
       </div>
       <p
-        className="mt-2 text-[color:var(--color-muted)] leading-snug"
-        style={{ fontSize: "clamp(0.85rem,1.1vw,1rem)" }}
+        className="mt-3 text-[color:var(--color-muted)] leading-snug"
+        style={{ fontSize: "clamp(0.95rem,1.15vw,1.4rem)" }}
       >
         {body}
       </p>
@@ -493,7 +517,7 @@ function SlackMark() {
       fill="none"
       aria-hidden
       className="shrink-0"
-      style={{ width: "clamp(2rem,4.5vw,3.5rem)", height: "clamp(2rem,4.5vw,3.5rem)" }}
+      style={{ width: "clamp(2.4rem,5vw,5rem)", height: "clamp(2.4rem,5vw,5rem)" }}
     >
       <path d="M5.042 15.165a2.528 2.528 0 1 1-2.52-2.52h2.52v2.52zm1.27 0a2.528 2.528 0 0 1 5.055 0v6.302a2.528 2.528 0 0 1-5.054 0v-6.302z" fill="#E01E5A" />
       <path d="M8.84 5.042a2.528 2.528 0 1 1 2.52-2.52v2.52h-2.52zm0 1.27a2.528 2.528 0 0 1 0 5.055H2.522a2.528 2.528 0 0 1 0-5.054H8.84z" fill="#36C5F0" />
@@ -520,12 +544,12 @@ function Numbers({
   return (
     <div className="text-center">
       <h2
-        className="text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
-        style={{ fontSize: "clamp(1rem,2.5vw,1.6rem)" }}
+        className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
+        style={{ fontSize: "clamp(1rem,1.8vw,1.8rem)" }}
       >
         By the numbers
       </h2>
-      <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-10">
+      <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-10 lg:gap-14">
         {stats.map((s, idx) => (
           <motion.div
             key={s.label}
@@ -533,12 +557,12 @@ function Numbers({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 + idx * 0.15, ease: "easeOut" }}
           >
-            <div className="font-bold leading-none" style={{ fontSize: "clamp(4rem, 14vw, 12rem)" }}>
+            <div className="font-bold leading-none" style={{ fontSize: "clamp(4.5rem, 14vw, 16rem)" }}>
               <CountUp value={s.value} color={s.color} />
             </div>
             <div
-              className="mt-4 text-[color:var(--color-muted)]"
-              style={{ fontSize: "clamp(1rem,2.5vw,1.8rem)" }}
+              className="mt-6 text-[color:var(--color-muted)] uppercase tracking-[0.2em]"
+              style={{ fontSize: "clamp(1.1rem,2.2vw,2.4rem)" }}
             >
               {s.label}
             </div>
@@ -559,20 +583,20 @@ function Sdlc({ buckets }: { buckets: Bucket[] }) {
       <div className="text-center">
         <h2
           className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
-          style={{ fontSize: "clamp(0.85rem,1.6vw,1.2rem)" }}
+          style={{ fontSize: "clamp(1rem,1.6vw,1.6rem)" }}
         >
           Ideas by SDLC stage
         </h2>
         <p
-          className="mt-2 text-[color:var(--color-foreground)]/85"
-          style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}
+          className="mt-3 text-[color:var(--color-foreground)]/85"
+          style={{ fontSize: "clamp(1.3rem,2.3vw,2.4rem)" }}
         >
           <span className="font-bold gradient-text tabular-nums">{total}</span>{" "}
           ideas across the lifecycle
         </p>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
         {buckets.map((b, idx) => {
           const pct = (b.count / max) * 100;
           const isTop = b.count === topCount && b.count > 0;
@@ -609,13 +633,17 @@ function Sdlc({ buckets }: { buckets: Bucket[] }) {
                 </span>
               )}
 
-              <div className="relative flex items-start gap-3 pr-16">
-                <span className="text-4xl leading-none shrink-0" aria-hidden>
+              <div className="relative flex items-start gap-4 pr-20">
+                <span
+                  className="leading-none shrink-0"
+                  style={{ fontSize: "clamp(2.2rem,3.4vw,4rem)" }}
+                  aria-hidden
+                >
                   {b.icon}
                 </span>
                 <span
                   className="font-semibold tracking-tight leading-tight"
-                  style={{ fontSize: "clamp(1rem,1.5vw,1.3rem)" }}
+                  style={{ fontSize: "clamp(1.15rem,1.7vw,1.9rem)" }}
                 >
                   {b.label}
                 </span>
@@ -624,13 +652,13 @@ function Sdlc({ buckets }: { buckets: Bucket[] }) {
               <div className="relative mt-6 flex items-end gap-3">
                 <span
                   className="font-bold tabular-nums gradient-text leading-none"
-                  style={{ fontSize: "clamp(2.8rem,5vw,4.5rem)" }}
+                  style={{ fontSize: "clamp(3.2rem,5.8vw,6.5rem)" }}
                 >
                   {b.count}
                 </span>
                 <span
                   className="mb-2 text-[color:var(--color-muted)] uppercase tracking-[0.18em]"
-                  style={{ fontSize: "clamp(0.7rem,1vw,0.85rem)" }}
+                  style={{ fontSize: "clamp(0.85rem,1.1vw,1.2rem)" }}
                 >
                   {b.count === 1 ? "idea" : "ideas"}
                 </span>
@@ -664,14 +692,14 @@ function Judges() {
   return (
     <div className="text-center">
       <h2
-        className="text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
-        style={{ fontSize: "clamp(1rem,2.5vw,1.6rem)" }}
+        className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
+        style={{ fontSize: "clamp(1rem,1.8vw,1.8rem)" }}
       >
         Meet the judges
       </h2>
-      <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-10 lg:gap-12">
         {JUDGES.map((j, idx) => {
-          const dim = "clamp(6rem,14vw,11rem)";
+          const dim = "clamp(7rem,14vw,14rem)";
           return (
             <motion.div
               key={j.name}
@@ -698,7 +726,7 @@ function Judges() {
                     style={{
                       width: dim,
                       height: dim,
-                      fontSize: "clamp(2rem,5vw,4rem)",
+                      fontSize: "clamp(2.4rem,5vw,5rem)",
                       background:
                         "linear-gradient(135deg, var(--color-accent), var(--color-accent-2) 60%, var(--color-accent-3))",
                     }}
@@ -707,23 +735,26 @@ function Judges() {
                   </div>
                 )}
               </motion.div>
-              <div className="mt-5 font-semibold" style={{ fontSize: "clamp(1.3rem,3vw,2.2rem)" }}>
+              <div
+                className="mt-6 font-semibold"
+                style={{ fontSize: "clamp(1.5rem,2.6vw,2.8rem)" }}
+              >
                 {j.name}
               </div>
               {j.title ? (
                 <>
-                  <div style={{ fontSize: "clamp(1rem,1.9vw,1.5rem)" }}>{j.title}</div>
+                  <div style={{ fontSize: "clamp(1.1rem,1.7vw,2rem)" }}>{j.title}</div>
                   <div
-                    className="mt-0.5 gradient-text font-semibold"
-                    style={{ fontSize: "clamp(0.95rem,1.7vw,1.35rem)" }}
+                    className="mt-1 gradient-text font-semibold"
+                    style={{ fontSize: "clamp(1.05rem,1.6vw,1.8rem)" }}
                   >
                     {j.company}
                   </div>
                 </>
               ) : (
                 <div
-                  className="mt-1 text-[color:var(--color-muted)]"
-                  style={{ fontSize: "clamp(0.9rem,1.6vw,1.2rem)" }}
+                  className="mt-2 text-[color:var(--color-muted)]"
+                  style={{ fontSize: "clamp(1rem,1.5vw,1.5rem)" }}
                 >
                   External judge
                 </div>
@@ -750,20 +781,20 @@ function Criteria() {
       <div className="text-center">
         <h2
           className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
-          style={{ fontSize: "clamp(0.85rem,1.6vw,1.2rem)" }}
+          style={{ fontSize: "clamp(1rem,1.6vw,1.6rem)" }}
         >
           How it&apos;s judged
         </h2>
         <p
-          className="mt-2 text-[color:var(--color-foreground)]/85"
-          style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}
+          className="mt-3 text-[color:var(--color-foreground)]/85"
+          style={{ fontSize: "clamp(1.3rem,2.3vw,2.4rem)" }}
         >
           Four signals, weighted to{" "}
           <span className="font-bold gradient-text tabular-nums">100</span>
         </p>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-5 lg:gap-6">
         {CRITERIA.map((c, idx) => {
           const pct = Math.round(c.weight * 100);
           const isTop = c.weight === topWeight;
@@ -794,8 +825,8 @@ function Criteria() {
               <div
                 className="relative shrink-0"
                 style={{
-                  width: "clamp(88px, 11vw, 130px)",
-                  height: "clamp(88px, 11vw, 130px)",
+                  width: "clamp(110px, 13vw, 220px)",
+                  height: "clamp(110px, 13vw, 220px)",
                 }}
               >
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -834,7 +865,7 @@ function Criteria() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span
                     className="font-bold tabular-nums gradient-text leading-none"
-                    style={{ fontSize: "clamp(1.4rem,2.2vw,2rem)" }}
+                    style={{ fontSize: "clamp(1.7rem,2.6vw,3.4rem)" }}
                   >
                     {pct}
                     <span style={{ fontSize: "0.55em", marginLeft: "0.05em" }}>
@@ -846,28 +877,32 @@ function Criteria() {
 
               {/* label + blurb */}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-2xl leading-none" aria-hidden>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span
+                    className="leading-none"
+                    style={{ fontSize: "clamp(1.8rem,2.6vw,3rem)" }}
+                    aria-hidden
+                  >
                     {ICONS[c.key]}
                   </span>
                   <h3
                     className="font-semibold tracking-tight"
-                    style={{ fontSize: "clamp(1.05rem,1.6vw,1.4rem)" }}
+                    style={{ fontSize: "clamp(1.25rem,1.8vw,2.2rem)" }}
                   >
                     {c.label}
                   </h3>
                   {isTop && (
                     <span
                       className="pill border border-[color:var(--color-accent-2)]/50 bg-[color:var(--color-accent-2)]/15 text-[color:var(--color-accent-2)] uppercase tracking-[0.18em]"
-                      style={{ fontSize: "clamp(0.6rem,0.85vw,0.75rem)" }}
+                      style={{ fontSize: "clamp(0.7rem,0.9vw,1rem)" }}
                     >
                       Top weight
                     </span>
                   )}
                 </div>
                 <p
-                  className="mt-2 text-[color:var(--color-muted)] leading-snug line-clamp-2"
-                  style={{ fontSize: "clamp(0.82rem,1.1vw,1rem)" }}
+                  className="mt-3 text-[color:var(--color-muted)] leading-snug line-clamp-2"
+                  style={{ fontSize: "clamp(1rem,1.2vw,1.4rem)" }}
                 >
                   {c.blurb}
                 </p>
@@ -886,7 +921,7 @@ function Criteria() {
         <span className="dot-live" />
         <span
           className="pill border border-[color:var(--color-accent)]/45 bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] uppercase tracking-[0.2em]"
-          style={{ fontSize: "clamp(0.78rem,1.2vw,1rem)" }}
+          style={{ fontSize: "clamp(0.9rem,1.3vw,1.4rem)" }}
         >
           Demos &amp; judging — Thursday, June 11
         </span>
