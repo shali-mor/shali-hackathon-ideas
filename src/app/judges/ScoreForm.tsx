@@ -115,9 +115,10 @@ export function ScoreForm({
               >
                 <input type="hidden" name={c.key} value={val ?? ""} />
 
-                <div className="flex items-center gap-5 sm:gap-6 flex-wrap pl-5 pr-3 py-3">
-                  {/* left: icon disc + label + status */}
-                  <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-5 sm:gap-8 flex-wrap pl-5 pr-3 py-3">
+                  {/* left: icon disc + label + status — fixed width so the
+                       button groups line up vertically across rows. */}
+                  <div className="flex items-center gap-3 min-w-0 w-full sm:w-[260px]">
                     <div
                       className="w-11 h-11 rounded-full flex items-center justify-center text-xl shrink-0 transition-all duration-200"
                       style={{
