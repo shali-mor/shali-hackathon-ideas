@@ -18,6 +18,13 @@ const RANGE = Array.from(
 
 const LABELS = ["Poor", "Below", "Solid", "Strong", "Wow"] as const;
 
+const ICONS: Record<CriterionKey, string> = {
+  impact: "🎯",
+  demo: "⚡",
+  pitch: "🎤",
+  adoptability: "🚀",
+};
+
 export function ScoreForm({
   token,
   submissionId,
@@ -49,120 +56,87 @@ export function ScoreForm({
 
   return (
     <div className="mt-5 border-t border-[color:var(--color-border)] pt-5">
-      {/* Live score readout */}
-      <div className="mb-5 flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-baseline gap-2">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
-            Your weighted score
-          </span>
-        </div>
-        <div className="flex items-center gap-3 flex-1 min-w-[200px] max-w-md">
-          <div className="flex-1 h-2 rounded-full bg-[color:var(--color-surface-2)] overflow-hidden">
-            <div
-              className="h-full transition-all duration-300 ease-out"
-              style={{
-                width: `${liveTotal ?? 0}%`,
-                background:
-                  "linear-gradient(to right, var(--color-accent-2), var(--color-accent))",
-              }}
-            />
-          </div>
-          <span
-            className={`text-3xl font-bold tabular-nums leading-none ${
-              complete
-                ? "gradient-text"
-                : "text-[color:var(--color-muted)]/50"
-            }`}
-            style={{ minWidth: "5.5ch", textAlign: "right" }}
-          >
-            {liveTotal ?? "—"}
-          </span>
-          <span className="text-xs text-[color:var(--color-muted)]">/ 100</span>
-        </div>
-      </div>
-
       <form action={saveAction}>
         <input type="hidden" name="token" value={token} />
         <input type="hidden" name="submissionId" value={submissionId} />
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {CRITERIA.map((c) => {
             const val = scores[c.key];
             const hov = hovered?.key === c.key ? hovered.value : null;
-            const displayVal = hov ?? val ?? 0;
+            const displayVal = hov ?? val;
             return (
               <div
                 key={c.key}
-                className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/40 px-4 py-3"
+                className="flex items-center justify-between gap-4 flex-wrap rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/40 px-4 py-3"
               >
                 <input type="hidden" name={c.key} value={val ?? ""} />
-                <div className="flex items-center justify-between gap-3 mb-2.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-medium truncate">{c.label}</span>
-                    <span className="pill border border-[color:var(--color-accent-2)]/40 bg-[color:var(--color-accent-2)]/10 text-[color:var(--color-accent-2)] text-[10px] tabular-nums shrink-0">
-                      {Math.round(c.weight * 100)}%
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {displayVal > 0 && (
-                      <span className="text-xs text-[color:var(--color-muted)] uppercase tracking-wider">
-                        {LABELS[displayVal - 1]}
+
+                {/* left: icon + label + status */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className="text-2xl leading-none shrink-0"
+                    aria-hidden
+                  >
+                    {ICONS[c.key]}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium leading-tight">
+                      {c.label}
+                    </div>
+                    <div className="mt-0.5 text-xs text-[color:var(--color-muted)] flex items-center gap-2">
+                      <span className="text-[color:var(--color-accent-2)] tabular-nums">
+                        {Math.round(c.weight * 100)}%
                       </span>
-                    )}
-                    <span
-                      className={`text-xl font-bold tabular-nums w-6 text-right ${
-                        val
-                          ? "text-[color:var(--color-accent-2)]"
-                          : "text-[color:var(--color-muted)]/40"
-                      }`}
-                    >
-                      {val ?? "·"}
-                    </span>
+                      <span aria-hidden>·</span>
+                      <span>
+                        {displayVal
+                          ? `${displayVal}/${SCORE_MAX} — ${LABELS[displayVal - 1]}`
+                          : "unrated"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Progressive segment bar — segments fill in cumulatively */}
+                {/* right: compact 1-5 button row */}
                 <div
-                  className="flex gap-1.5"
+                  className="flex gap-1 shrink-0"
+                  role="radiogroup"
+                  aria-label={c.label}
                   onMouseLeave={() => setHovered(null)}
                 >
                   {RANGE.map((n) => {
                     const selected = typeof val === "number" && n <= val;
-                    const hoveredFill = hov !== null && n <= hov;
-                    const lit = hov !== null ? hoveredFill : selected;
+                    const hovFill = hov !== null && n <= hov;
+                    const lit = hov !== null ? hovFill : selected;
+                    const isCurrent = n === val;
                     return (
                       <button
                         key={n}
                         type="button"
+                        role="radio"
+                        aria-checked={isCurrent}
                         onClick={() => set(c.key, n)}
                         onMouseEnter={() => setHovered({ key: c.key, value: n })}
                         onFocus={() => setHovered({ key: c.key, value: n })}
                         onBlur={() => setHovered(null)}
-                        aria-label={`${c.label}: ${n} of ${SCORE_MAX}`}
-                        aria-pressed={selected}
-                        className="flex-1 h-9 rounded-md border transition-all duration-150 relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent-2)]/60"
+                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-md text-sm font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent-2)]/60"
                         style={{
                           background: lit
                             ? "linear-gradient(135deg, var(--color-accent-2), var(--color-accent))"
-                            : "color-mix(in oklab, var(--color-surface-2) 60%, transparent)",
-                          borderColor: lit
-                            ? "transparent"
-                            : "var(--color-border)",
-                          boxShadow:
-                            n === val
-                              ? "0 0 0 2px color-mix(in oklab, var(--color-accent-2) 35%, transparent)"
-                              : "none",
+                            : "color-mix(in oklab, var(--color-surface-2) 70%, transparent)",
+                          color: lit
+                            ? "var(--color-background)"
+                            : "var(--color-muted)",
+                          borderWidth: lit ? 0 : 1,
+                          borderStyle: "solid",
+                          borderColor: "var(--color-border)",
+                          boxShadow: isCurrent
+                            ? "0 0 0 2px color-mix(in oklab, var(--color-accent-2) 35%, transparent)"
+                            : "none",
                         }}
                       >
-                        <span
-                          className={`absolute inset-0 flex items-center justify-center text-xs font-bold tabular-nums ${
-                            lit
-                              ? "text-[color:var(--color-background)]"
-                              : "text-[color:var(--color-muted)]"
-                          }`}
-                        >
-                          {n}
-                        </span>
+                        {n}
                       </button>
                     );
                   })}
@@ -172,26 +146,76 @@ export function ScoreForm({
           })}
         </div>
 
-        <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-xs text-[color:var(--color-muted)]">
-            {saveState?.ok
-              ? "Saved — re-save any time to update."
-              : saveState?.error
-              ? <span className="text-[color:var(--color-danger)]">{saveState.error}</span>
-              : clearState?.ok
-              ? "Cleared."
-              : complete
-              ? "Ready to save."
-              : `${ratedCount} of ${CRITERIA.length} rated — pick all 4 to save.`}
+        {/* footer: rated progress, weighted total, save button */}
+        <div className="mt-5 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 min-w-[220px] flex-1">
+            <div className="flex gap-1">
+              {CRITERIA.map((c) => (
+                <span
+                  key={c.key}
+                  className="h-1.5 w-7 rounded-full transition-colors duration-200"
+                  style={{
+                    background:
+                      typeof scores[c.key] === "number"
+                        ? "var(--color-accent-2)"
+                        : "color-mix(in oklab, white 12%, transparent)",
+                  }}
+                  aria-hidden
+                />
+              ))}
+            </div>
+            <div className="text-xs text-[color:var(--color-muted)]">
+              {complete ? "All four rated" : `${ratedCount} of ${CRITERIA.length} rated`}
+            </div>
           </div>
-          <button
-            type="submit"
-            disabled={saving || !complete}
-            className="btn btn-primary"
-          >
-            {saving ? "Saving…" : saveState?.ok ? "Saved ✓" : "Save score"}
-          </button>
+
+          <div className="flex items-center gap-4">
+            <div className="text-right leading-none">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                Weighted
+              </div>
+              <div className="mt-1 flex items-baseline gap-1 justify-end">
+                <span
+                  className={`text-3xl font-bold tabular-nums ${
+                    complete
+                      ? "gradient-text"
+                      : "text-[color:var(--color-muted)]/50"
+                  }`}
+                >
+                  {liveTotal ?? "—"}
+                </span>
+                <span className="text-xs text-[color:var(--color-muted)]">/ 100</span>
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={saving || !complete}
+              className="btn btn-primary"
+            >
+              {saving ? "Saving…" : saveState?.ok ? "Saved ✓" : "Save score"}
+            </button>
+          </div>
         </div>
+
+        {/* status line */}
+        {(saveState || clearState) && (
+          <div className="mt-3 text-xs">
+            {saveState?.ok && (
+              <span className="text-[color:var(--color-success)]">
+                Saved — re-save any time to update.
+              </span>
+            )}
+            {saveState && !saveState.ok && (
+              <span className="text-[color:var(--color-danger)]">{saveState.error}</span>
+            )}
+            {clearState?.ok && (
+              <span className="text-[color:var(--color-muted)]">Cleared.</span>
+            )}
+            {clearState && !clearState.ok && (
+              <span className="text-[color:var(--color-danger)]">{clearState.error}</span>
+            )}
+          </div>
+        )}
       </form>
 
       {hasAnyScore && (
