@@ -111,31 +111,6 @@ export function KioskDeck({
     <div className="fixed inset-0 z-50 overflow-hidden bg-[color:var(--color-background)]">
       <AnimatedBackdrop />
 
-      {/* 3D wireframe orb — pinned to the right edge, vertically centered.
-          Stays on every slide as a side accent; never overlaps the
-          headlines (slide content area is constrained, see below). */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute right-[3vw] top-1/2 z-[5] -translate-y-1/2"
-        initial={false}
-        animate={
-          slides[i].key === "welcome"
-            ? {
-                width: "min(34vh, 30vw)",
-                height: "min(34vh, 30vw)",
-                opacity: 0.7,
-              }
-            : {
-                width: "min(24vh, 22vw)",
-                height: "min(24vh, 22vw)",
-                opacity: 0.55,
-              }
-        }
-        transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
-      >
-        <Hero3D />
-      </motion.div>
-
       {/* top bar */}
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-10 py-6 text-sm text-[color:var(--color-muted)]">
         <span className="flex items-center gap-2.5">
@@ -147,20 +122,38 @@ export function KioskDeck({
         <span className="tabular-nums">{clock}</span>
       </div>
 
-      {/* slide — content area is offset to leave room for the orb on the right */}
-      <div className="absolute inset-0 z-10 flex items-center justify-start pl-12 pr-[max(28vw,360px)]">
-        <AnimatePresence mode="wait">
+      {/* slide — 2-column hero grid: content on the left, orb on the right.
+          The orb lives as a sibling of <AnimatePresence>, so it never
+          remounts (no Canvas re-init) when the slide cycles. */}
+      <div className="absolute inset-0 z-10 flex items-center justify-center px-12 py-20">
+        <div className="grid w-full max-w-7xl items-center gap-10 lg:gap-16 grid-cols-1 lg:grid-cols-[1.4fr_1fr]">
+          <div className="relative min-w-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={slides[i].key}
+                initial={{ opacity: 0, y: 28, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -28, scale: 0.98 }}
+                transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+              >
+                {slides[i].node}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
           <motion.div
-            key={slides[i].key}
-            initial={{ opacity: 0, y: 28, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -28, scale: 0.98 }}
-            transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
-            className="w-full max-w-5xl"
+            aria-hidden
+            className="pointer-events-none relative mx-auto aspect-square w-full max-w-[420px]"
+            initial={false}
+            animate={{
+              opacity: slides[i].key === "welcome" ? 0.85 : 0.55,
+              scale: slides[i].key === "welcome" ? 1 : 0.85,
+            }}
+            transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
           >
-            {slides[i].node}
+            <Hero3D />
           </motion.div>
-        </AnimatePresence>
+        </div>
       </div>
 
       {/* progress dots */}
@@ -374,7 +367,7 @@ function Welcome({ endTs }: { endTs: number | null }) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }}
         className="mt-4 font-bold tracking-tight leading-[0.95] gradient-text"
-        style={{ fontSize: "clamp(3rem, 12vw, 11rem)" }}
+        style={{ fontSize: "clamp(2.5rem, 8.5vw, 9rem)" }}
       >
         Hackathon
       </motion.h1>
