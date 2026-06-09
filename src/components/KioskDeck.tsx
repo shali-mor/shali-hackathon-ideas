@@ -111,38 +111,27 @@ export function KioskDeck({
     <div className="fixed inset-0 z-50 overflow-hidden bg-[color:var(--color-background)]">
       <AnimatedBackdrop />
 
-      {/* 3D wireframe orb — large + center on welcome, then a smaller
-          ambient accent in the bottom-right on every other slide so it
-          stays present throughout the deck. */}
+      {/* 3D wireframe orb — pinned to the right edge, vertically centered.
+          Stays on every slide as a side accent; never overlaps the
+          headlines (slide content area is constrained, see below). */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute z-[5]"
+        className="pointer-events-none absolute right-[3vw] top-1/2 z-[5] -translate-y-1/2"
         initial={false}
         animate={
           slides[i].key === "welcome"
             ? {
-                top: "50%",
-                left: "50%",
-                width: "min(72vh, 72vw)",
-                height: "min(72vh, 72vw)",
-                x: "-50%",
-                y: "-50%",
+                width: "min(34vh, 30vw)",
+                height: "min(34vh, 30vw)",
                 opacity: 0.7,
               }
             : {
-                top: "auto",
-                left: "auto",
-                right: "4vw",
-                bottom: "10vh",
-                width: "min(28vh, 28vw)",
-                height: "min(28vh, 28vw)",
-                x: 0,
-                y: 0,
+                width: "min(24vh, 22vw)",
+                height: "min(24vh, 22vw)",
                 opacity: 0.55,
               }
         }
         transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
-        style={{ transformOrigin: "center" }}
       >
         <Hero3D />
       </motion.div>
@@ -158,8 +147,8 @@ export function KioskDeck({
         <span className="tabular-nums">{clock}</span>
       </div>
 
-      {/* slide */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center px-12">
+      {/* slide — content area is offset to leave room for the orb on the right */}
+      <div className="absolute inset-0 z-10 flex items-center justify-start pl-12 pr-[max(28vw,360px)]">
         <AnimatePresence mode="wait">
           <motion.div
             key={slides[i].key}
@@ -167,7 +156,7 @@ export function KioskDeck({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -28, scale: 0.98 }}
             transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
-            className="w-full max-w-6xl"
+            className="w-full max-w-5xl"
           >
             {slides[i].node}
           </motion.div>
