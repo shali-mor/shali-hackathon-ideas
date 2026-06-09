@@ -47,46 +47,113 @@ export default async function AdminPage({
     rejected: all.filter((r) => r.status === "rejected").length,
   };
 
-  return (
-    <div className="space-y-8">
-      <header className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Review queue</h1>
-          <p className="mt-1 text-sm text-[color:var(--color-muted)]">
-            Accept or reject submissions. Submitters see status update in their dashboard.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Link
-            href="/screen"
-            target="_blank"
-            className="btn inline-flex items-center gap-2 border border-[color:var(--color-accent-2)]/60 bg-[color:var(--color-accent-2)]/15 text-[color:var(--color-accent-2)] hover:bg-[color:var(--color-accent-2)]/25 hover:text-[color:var(--color-foreground)] transition"
-          >
-            <span className="dot-live" />
-            📺 Live screen
-            <span className="text-[10px] opacity-70">↗</span>
-          </Link>
-          <Link href="/ideas/export" className="btn btn-ghost">
-            📄 Export ideas to PDF
-          </Link>
-        </div>
-      </header>
+  const STAT_TABS = [
+    {
+      key: "pending" as const,
+      label: "Pending review",
+      colorVar: "--color-warn",
+    },
+    {
+      key: "accepted" as const,
+      label: "Accepted",
+      colorVar: "--color-success",
+    },
+    {
+      key: "rejected" as const,
+      label: "Rejected",
+      colorVar: "--color-danger",
+    },
+    {
+      key: "all" as const,
+      label: "All ideas",
+      colorVar: "--color-accent-2",
+    },
+  ];
 
-      <nav className="flex flex-wrap gap-2">
-        {(["pending", "accepted", "rejected", "all"] as const).map((s) => (
-          <Link
-            key={s}
-            href={`/admin?status=${s}`}
-            className={`pill border ${
-              filter === s
-                ? "bg-[color:var(--color-foreground)] text-[color:var(--color-background)] border-transparent"
-                : "border-[color:var(--color-border)] text-[color:var(--color-muted)] hover:text-[color:var(--color-foreground)]"
-            }`}
-          >
-            {s} <span className="opacity-60">({counts[s]})</span>
-          </Link>
-        ))}
-      </nav>
+  return (
+    <div className="space-y-6">
+      <header className="space-y-6">
+        <div className="flex items-end justify-between gap-6 flex-wrap">
+          <div className="min-w-0">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-none">
+              <span className="gradient-text">Review</span> queue
+            </h1>
+            <p className="mt-3 text-sm text-[color:var(--color-muted)]">
+              Accept or reject submissions · {all.length} total
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              href="/screen"
+              target="_blank"
+              className="inline-flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition border bg-[color:var(--color-accent-2)]/15 hover:bg-[color:var(--color-accent-2)]/25"
+              style={{
+                borderColor: "color-mix(in oklab, var(--color-accent-2) 55%, transparent)",
+                boxShadow:
+                  "0 0 0 1px color-mix(in oklab, var(--color-accent-2) 18%, transparent), 0 6px 18px -10px color-mix(in oklab, var(--color-accent-2) 60%, transparent)",
+              }}
+            >
+              <span className="dot-live" />
+              <span>Live screen</span>
+              <span className="text-xs opacity-70">↗</span>
+            </Link>
+            <Link
+              href="/ideas/export"
+              className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium border border-[color:var(--color-border)] text-[color:var(--color-muted)] hover:text-[color:var(--color-foreground)] hover:border-[color:var(--color-accent-2)]/40 transition"
+            >
+              <span aria-hidden>📄</span>
+              <span>Export PDF</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Stat tiles that are also the status filter */}
+        <nav className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {STAT_TABS.map((tab) => {
+            const active = filter === tab.key;
+            return (
+              <Link
+                key={tab.key}
+                href={`/admin?status=${tab.key}`}
+                aria-current={active ? "page" : undefined}
+                className="group relative rounded-lg border px-4 py-3.5 transition overflow-hidden"
+                style={{
+                  borderColor: active
+                    ? `color-mix(in oklab, var(${tab.colorVar}) 55%, transparent)`
+                    : "var(--color-border)",
+                  background: active
+                    ? `color-mix(in oklab, var(${tab.colorVar}) 12%, transparent)`
+                    : "color-mix(in oklab, white 2%, transparent)",
+                  boxShadow: active
+                    ? `inset 0 0 0 1px color-mix(in oklab, var(${tab.colorVar}) 30%, transparent)`
+                    : "none",
+                }}
+              >
+                <div
+                  className="text-[10px] uppercase tracking-[0.15em]"
+                  style={{
+                    color: active
+                      ? `var(${tab.colorVar})`
+                      : "var(--color-muted)",
+                  }}
+                >
+                  {tab.label}
+                </div>
+                <div
+                  className="mt-1 text-3xl font-bold tabular-nums leading-none"
+                  style={{
+                    color: active
+                      ? "var(--color-foreground)"
+                      : "var(--color-foreground)",
+                  }}
+                >
+                  {counts[tab.key]}
+                </div>
+              </Link>
+            );
+          })}
+        </nav>
+      </header>
 
       {rows.length === 0 ? (
         <div className="card text-center py-12 text-[color:var(--color-muted)]">
