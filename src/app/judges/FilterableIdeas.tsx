@@ -111,46 +111,64 @@ export function FilterableIdeas({
           No ideas match{q ? <> &ldquo;{q}&rdquo;</> : ""}.
         </div>
       ) : (
-        <ol className="space-y-5 mt-5">
+        <ol className="space-y-4 mt-5">
           {filtered.map(({ s, originalIndex }) => (
             <li key={s.id} className="card">
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="text-xs text-[color:var(--color-muted)] tabular-nums">
-                  #{String(originalIndex + 1).padStart(2, "0")}
-                </span>
-                <h2 className="text-2xl font-semibold tracking-tight">
-                  {s.title}
-                </h2>
-                {s.scored && (
-                  <span className="pill border border-[color:var(--color-success)]/40 bg-[color:var(--color-success)]/12 text-[color:var(--color-success)] text-[10px] uppercase tracking-wider">
-                    ✓ scored
-                  </span>
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <span className="text-xs text-[color:var(--color-muted)] tabular-nums">
+                      #{String(originalIndex + 1).padStart(2, "0")}
+                    </span>
+                    <h2 className="text-xl font-semibold tracking-tight">
+                      {s.title}
+                    </h2>
+                    {s.scored && (
+                      <span className="pill border border-[color:var(--color-success)]/40 bg-[color:var(--color-success)]/12 text-[color:var(--color-success)] text-[10px] uppercase tracking-wider">
+                        ✓ scored
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1.5 text-sm text-[color:var(--color-muted)] leading-snug">
+                    {summarize(s.description)}
+                  </p>
+                </div>
+                {s.developers.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 shrink-0 max-w-full justify-end">
+                    {s.developers.map((d) => (
+                      <span
+                        key={d}
+                        className="pill border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]/70 text-[color:var(--color-foreground)] text-xs"
+                      >
+                        {d}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
-              <section className="mt-4 space-y-1">
-                <h3 className="text-xs text-[color:var(--color-muted)]">Idea</h3>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {s.description}
-                </p>
-              </section>
-              <section className="mt-4 space-y-1">
-                <h3 className="text-xs text-[color:var(--color-muted)]">
-                  Motivation
-                </h3>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {s.motivation}
-                </p>
-              </section>
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {s.developers.map((d) => (
-                  <span
-                    key={d}
-                    className="pill border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]/70 text-[color:var(--color-foreground)]"
-                  >
-                    {d}
-                  </span>
-                ))}
-              </div>
+
+              <details className="mt-3 group">
+                <summary className="cursor-pointer list-none inline-flex items-center gap-1.5 text-xs text-[color:var(--color-muted)] hover:text-[color:var(--color-foreground)] transition">
+                  <span className="inline-block transition group-open:rotate-90">▸</span>
+                  <span className="group-open:hidden">Show full pitch</span>
+                  <span className="hidden group-open:inline">Hide full pitch</span>
+                </summary>
+                <div className="mt-3 space-y-3 text-sm leading-relaxed">
+                  <section>
+                    <h3 className="text-[10px] uppercase tracking-wider text-[color:var(--color-muted)]">
+                      Idea
+                    </h3>
+                    <p className="mt-1 whitespace-pre-wrap">{s.description}</p>
+                  </section>
+                  <section>
+                    <h3 className="text-[10px] uppercase tracking-wider text-[color:var(--color-muted)]">
+                      Motivation
+                    </h3>
+                    <p className="mt-1 whitespace-pre-wrap">{s.motivation}</p>
+                  </section>
+                </div>
+              </details>
+
               <ScoreForm token={token} submissionId={s.id} initial={s.initial} />
             </li>
           ))}
@@ -158,6 +176,23 @@ export function FilterableIdeas({
       )}
     </div>
   );
+}
+
+// Pull a short, scannable preview out of a multi-paragraph idea.
+// Skip short header-only lines (e.g. "Overview", "Problem Statement"),
+// take the first sentence of the first real paragraph, cap at 180 chars.
+function summarize(text: string): string {
+  const lines = text
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const body =
+    lines.find(
+      (l) => l.length > 30 || (l.length > 0 && !/^[\w &/]{1,30}$/.test(l)),
+    ) ?? lines[0] ?? "";
+  const sentence = body.match(/^[^.!?\n]+[.!?]/)?.[0] ?? body;
+  const out = sentence.trim();
+  return out.length > 180 ? out.slice(0, 177) + "…" : out;
 }
 
 function FilterPill({
