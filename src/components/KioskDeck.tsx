@@ -637,41 +637,160 @@ function Judges() {
 }
 
 function Criteria() {
+  const ICONS: Record<string, string> = {
+    impact: "🎯",
+    demo: "⚡",
+    pitch: "🎤",
+    adoptability: "🚀",
+  };
+  const topWeight = Math.max(...CRITERIA.map((c) => c.weight));
+
   return (
     <div>
-      <h2
-        className="text-center text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
-        style={{ fontSize: "clamp(1rem,2.5vw,1.6rem)" }}
-      >
-        How it&apos;s judged
-      </h2>
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {CRITERIA.map((c, idx) => (
-          <motion.div
-            key={c.key}
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 + idx * 0.12, ease: "easeOut" }}
-            className="card flex items-baseline gap-4"
-          >
-            <span
-              className="font-bold tabular-nums gradient-text"
-              style={{ fontSize: "clamp(1.6rem,4vw,3rem)" }}
-            >
-              {Math.round(c.weight * 100)}%
-            </span>
-            <span className="font-semibold" style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}>
-              {c.label}
-            </span>
-          </motion.div>
-        ))}
+      <div className="text-center">
+        <h2
+          className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
+          style={{ fontSize: "clamp(0.85rem,1.6vw,1.2rem)" }}
+        >
+          How it&apos;s judged
+        </h2>
+        <p
+          className="mt-2 text-[color:var(--color-foreground)]/85"
+          style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}
+        >
+          Four signals, weighted to{" "}
+          <span className="font-bold gradient-text tabular-nums">100</span>
+        </p>
       </div>
-      <p
-        className="mt-10 text-center text-[color:var(--color-muted)]"
-        style={{ fontSize: "clamp(1rem,2vw,1.5rem)" }}
+
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
+        {CRITERIA.map((c, idx) => {
+          const pct = Math.round(c.weight * 100);
+          const isTop = c.weight === topWeight;
+          const gradId = `critGrad-${c.key}`;
+          const R = 42;
+          const C = 2 * Math.PI * R;
+          return (
+            <motion.div
+              key={c.key}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1, ease: [0.2, 0.8, 0.2, 1] }}
+              className={`card relative overflow-hidden flex items-center gap-4 lg:gap-6 ${
+                isTop ? "glow-ring" : ""
+              }`}
+            >
+              {/* ambient gradient wash, weighted by the criterion */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -z-10"
+                style={{
+                  background:
+                    "radial-gradient(circle at 0% 50%, color-mix(in oklab, var(--color-accent-2) 14%, transparent), transparent 65%)",
+                }}
+              />
+
+              {/* circular progress ring + % in center */}
+              <div
+                className="relative shrink-0"
+                style={{
+                  width: "clamp(88px, 11vw, 130px)",
+                  height: "clamp(88px, 11vw, 130px)",
+                }}
+              >
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <defs>
+                    <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="var(--color-accent-2)" />
+                      <stop offset="100%" stopColor="var(--color-accent)" />
+                    </linearGradient>
+                  </defs>
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={R}
+                    fill="none"
+                    stroke="color-mix(in oklab, white 10%, transparent)"
+                    strokeWidth="7"
+                  />
+                  <motion.circle
+                    cx="50"
+                    cy="50"
+                    r={R}
+                    fill="none"
+                    stroke={`url(#${gradId})`}
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    strokeDasharray={C}
+                    initial={{ strokeDashoffset: C }}
+                    animate={{ strokeDashoffset: C * (1 - c.weight) }}
+                    transition={{
+                      delay: 0.25 + idx * 0.1,
+                      duration: 1.2,
+                      ease: [0.2, 0.8, 0.2, 1],
+                    }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span
+                    className="font-bold tabular-nums gradient-text leading-none"
+                    style={{ fontSize: "clamp(1.4rem,2.2vw,2rem)" }}
+                  >
+                    {pct}
+                    <span style={{ fontSize: "0.55em", marginLeft: "0.05em" }}>
+                      %
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* label + blurb */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-2xl leading-none" aria-hidden>
+                    {ICONS[c.key]}
+                  </span>
+                  <h3
+                    className="font-semibold tracking-tight"
+                    style={{ fontSize: "clamp(1.05rem,1.6vw,1.4rem)" }}
+                  >
+                    {c.label}
+                  </h3>
+                  {isTop && (
+                    <span
+                      className="pill border border-[color:var(--color-accent-2)]/50 bg-[color:var(--color-accent-2)]/15 text-[color:var(--color-accent-2)] uppercase tracking-[0.18em]"
+                      style={{ fontSize: "clamp(0.6rem,0.85vw,0.75rem)" }}
+                    >
+                      Top weight
+                    </span>
+                  )}
+                </div>
+                <p
+                  className="mt-2 text-[color:var(--color-muted)] leading-snug line-clamp-2"
+                  style={{ fontSize: "clamp(0.82rem,1.1vw,1rem)" }}
+                >
+                  {c.blurb}
+                </p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
+        className="mt-8 flex items-center justify-center gap-2.5"
       >
-        Demos &amp; judging — Thursday, June 11
-      </p>
+        <span className="dot-live" />
+        <span
+          className="pill border border-[color:var(--color-accent)]/45 bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] uppercase tracking-[0.2em]"
+          style={{ fontSize: "clamp(0.78rem,1.2vw,1rem)" }}
+        >
+          Demos &amp; judging — Thursday, June 11
+        </span>
+      </motion.div>
     </div>
   );
 }
