@@ -43,6 +43,9 @@ yarn-error.log*
 # local database backups (may contain personal data — never commit)
 /backups
 
+# kiosk MP4 captures produced by scripts/record-kiosk.ts
+/recordings/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
