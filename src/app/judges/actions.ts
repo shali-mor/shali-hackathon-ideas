@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { and, eq } from "drizzle-orm";
 import { db, judgeScores } from "@/lib/db";
 import { verifyJudgeToken } from "@/lib/judge-tokens";
 import { CRITERIA, SCORE_MIN, SCORE_MAX } from "@/lib/judging";
@@ -50,6 +51,30 @@ export async function saveScore(
         updatedAt: new Date(),
       },
     });
+
+  revalidatePath("/judges");
+  return { ok: true };
+}
+
+export async function clearScore(
+  _prev: ScoreState,
+  formData: FormData,
+): Promise<ScoreState> {
+  const token = String(formData.get("token") ?? "");
+  const judge = await verifyJudgeToken(token);
+  if (!judge) return { ok: false, error: "Invalid or expired judge link." };
+
+  const submissionId = String(formData.get("submissionId") ?? "");
+  if (!submissionId) return { ok: false, error: "Missing idea." };
+
+  await db
+    .delete(judgeScores)
+    .where(
+      and(
+        eq(judgeScores.judgeEmail, judge.email.toLowerCase()),
+        eq(judgeScores.submissionId, submissionId),
+      ),
+    );
 
   revalidatePath("/judges");
   return { ok: true };
