@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { desc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
-import { db, submissions } from "@/lib/db";
+import { db, submissions, judgeScores } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
+import { aggregateScores, type ScoreRow } from "@/lib/judging";
 import {
   acceptSubmission,
   rejectSubmission,
@@ -25,6 +26,19 @@ export default async function AdminPage({
   const { status: filter = "pending" } = await searchParams;
   const all = await db.select().from(submissions).orderBy(desc(submissions.createdAt));
   const rows = filter === "all" ? all : all.filter((r) => r.status === filter);
+
+  // Pull all judge scores once and map each submission → aggregate.
+  const allScores = await db.select().from(judgeScores);
+  const scoreRows: ScoreRow[] = allScores.map((s) => ({
+    submissionId: s.submissionId,
+    impact: s.impact,
+    demo: s.demo,
+    pitch: s.pitch,
+    adoptability: s.adoptability,
+  }));
+  const aggBySubmission = new Map(
+    aggregateScores(scoreRows).map((a) => [a.submissionId, a]),
+  );
 
   const counts = {
     all: all.length,
@@ -74,10 +88,12 @@ export default async function AdminPage({
         </div>
       ) : (
         <ul className="space-y-4">
-          {rows.map((s) => (
+          {rows.map((s) => {
+            const agg = aggBySubmission.get(s.id);
+            return (
             <li key={s.id} className="card">
               <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3 flex-wrap">
                     <Link
                       href={`/ideas/${s.id}`}
@@ -105,6 +121,31 @@ export default async function AdminPage({
                     ))}
                   </div>
                 </div>
+                <Link
+                  href="/judges"
+                  className="shrink-0 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]/40 px-3 py-2 text-right hover:border-[color:var(--color-accent-2)]/50 transition"
+                  title={agg ? `Open judging leaderboard` : "Open judging board"}
+                >
+                  {agg ? (
+                    <>
+                      <div className="text-2xl font-bold tabular-nums gradient-text leading-none">
+                        {agg.total}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wider text-[color:var(--color-muted)] mt-1">
+                        / 100 · {agg.judges} judge{agg.judges === 1 ? "" : "s"}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-sm text-[color:var(--color-muted)] leading-none">
+                        —
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wider text-[color:var(--color-muted)] mt-1">
+                        Not scored
+                      </div>
+                    </>
+                  )}
+                </Link>
               </div>
 
               <details className="mt-4 group">
@@ -153,7 +194,8 @@ export default async function AdminPage({
                 </div>
               </details>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </div>
