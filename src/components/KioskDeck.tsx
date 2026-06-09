@@ -261,12 +261,15 @@ function useHackathonEnd(): number | null {
 }
 
 function Countdown24({ endTs }: { endTs: number | null }) {
-  const [now, setNow] = useState(() => Date.now());
+  // Initialise `now` on the client only — Date.now() at render time would
+  // differ between SSR and hydration and trigger a mismatch.
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
+    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
-  if (endTs == null) return null;
+  if (endTs == null || now == null) return null;
   const ms = endTs - now;
   if (ms <= 0) {
     return (
