@@ -57,8 +57,14 @@ export default async function AdminPage({
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Link href="/screen" className="btn btn-ghost" target="_blank">
+          <Link
+            href="/screen"
+            target="_blank"
+            className="btn inline-flex items-center gap-2 border border-[color:var(--color-accent-2)]/60 bg-[color:var(--color-accent-2)]/15 text-[color:var(--color-accent-2)] hover:bg-[color:var(--color-accent-2)]/25 hover:text-[color:var(--color-foreground)] transition"
+          >
+            <span className="dot-live" />
             📺 Live screen
+            <span className="text-[10px] opacity-70">↗</span>
           </Link>
           <Link href="/ideas/export" className="btn btn-ghost">
             📄 Export ideas to PDF

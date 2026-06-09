@@ -81,6 +81,14 @@ export default async function RootLayout({
                   >
                     🏆 Judging
                   </Link>
+                  <Link
+                    href="/screen"
+                    target="_blank"
+                    className="text-sm inline-flex items-center gap-1.5 text-[color:var(--color-accent-3)] hover:brightness-110"
+                  >
+                    <span className="dot-live" />
+                    📺 Live
+                  </Link>
                 </>
               )}
             </nav>
