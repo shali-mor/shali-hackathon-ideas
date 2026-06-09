@@ -111,13 +111,38 @@ export function KioskDeck({
     <div className="fixed inset-0 z-50 overflow-hidden bg-[color:var(--color-background)]">
       <AnimatedBackdrop />
 
-      {/* 3D wireframe orb — featured on the welcome/starting slide */}
+      {/* 3D wireframe orb — large + center on welcome, then a smaller
+          ambient accent in the bottom-right on every other slide so it
+          stays present throughout the deck. */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 z-[5] -translate-x-1/2 -translate-y-1/2"
-        style={{ width: "min(72vh, 72vw)", height: "min(72vh, 72vw)" }}
-        animate={{ opacity: slides[i].key === "welcome" ? 0.7 : 0 }}
-        transition={{ duration: 0.6 }}
+        className="pointer-events-none absolute z-[5]"
+        initial={false}
+        animate={
+          slides[i].key === "welcome"
+            ? {
+                top: "50%",
+                left: "50%",
+                width: "min(72vh, 72vw)",
+                height: "min(72vh, 72vw)",
+                x: "-50%",
+                y: "-50%",
+                opacity: 0.7,
+              }
+            : {
+                top: "auto",
+                left: "auto",
+                right: "4vw",
+                bottom: "10vh",
+                width: "min(28vh, 28vw)",
+                height: "min(28vh, 28vw)",
+                x: 0,
+                y: 0,
+                opacity: 0.55,
+              }
+        }
+        transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
+        style={{ transformOrigin: "center" }}
       >
         <Hero3D />
       </motion.div>
