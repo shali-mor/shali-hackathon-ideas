@@ -15,7 +15,7 @@ export default async function SignInPage({
 
   const error =
     params.error === "AccessDenied"
-      ? "Only @forcepoint.com emails are allowed."
+      ? "That email isn't on the access list. Forcepoint addresses are open; external admins need to be added explicitly."
       : params.error === "BadName"
       ? "Enter your name (2–80 chars)."
       : null;
@@ -26,11 +26,9 @@ export default async function SignInPage({
         Let&apos;s <span className="gradient-text">hack</span>.
       </h1>
       <p className="mt-3 text-sm text-[color:var(--color-muted)]">
-        Enter your name and{" "}
-        <span className="text-[color:var(--color-foreground)]">
-          @forcepoint.com
-        </span>{" "}
-        email. No password — we trust you.
+        Enter your name and email. Forcepoint addresses are open; invited
+        external guests use the email they were added with. No password — we
+        trust you.
       </p>
 
       {error && (
@@ -59,13 +57,12 @@ export default async function SignInPage({
           />
         </label>
         <label className="block">
-          <span className="text-sm font-medium">Forcepoint email</span>
+          <span className="text-sm font-medium">Email</span>
           <input
             name="email"
             type="email"
             required
             placeholder="you@forcepoint.com"
-            pattern=".*@forcepoint\.com$"
             className="input mt-1.5"
             autoComplete="email"
           />
