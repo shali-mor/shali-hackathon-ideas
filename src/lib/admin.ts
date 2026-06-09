@@ -15,5 +15,8 @@ export const ALLOWED_EMAIL_DOMAIN = "forcepoint.com";
 
 export function isAllowedEmail(email: string | null | undefined): boolean {
   if (!email) return false;
-  return email.toLowerCase().endsWith(`@${ALLOWED_EMAIL_DOMAIN}`);
+  const lower = email.toLowerCase();
+  if (lower.endsWith(`@${ALLOWED_EMAIL_DOMAIN}`)) return true;
+  // External admins (judges/guests on non-Forcepoint domains) can sign in too.
+  return getAdminEmails().includes(lower);
 }
