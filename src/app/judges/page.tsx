@@ -7,10 +7,9 @@ import {
   aggregateScores,
   weightedTotal,
   type ScoreRow,
-  type CriterionScores,
 } from "@/lib/judging";
 import type { JudgeScore } from "@/lib/db/schema";
-import { ScoreForm } from "./ScoreForm";
+import { FilterableIdeas, type IdeaForJudging } from "./FilterableIdeas";
 
 export const dynamic = "force-dynamic";
 
@@ -98,50 +97,27 @@ async function ScoringList({
     );
   }
 
-  return (
-    <ol className="space-y-5">
-      {accepted.map((s, i) => {
-        const mine = byId.get(s.id);
-        const initial: Partial<CriterionScores> | undefined = mine
-          ? {
-              impact: mine.impact,
-              demo: mine.demo,
-              pitch: mine.pitch,
-              adoptability: mine.adoptability,
-            }
-          : undefined;
-        return (
-          <li key={s.id} className="card">
-            <div className="flex items-baseline gap-3 flex-wrap">
-              <span className="text-xs text-[color:var(--color-muted)] tabular-nums">
-                #{String(i + 1).padStart(2, "0")}
-              </span>
-              <h2 className="text-2xl font-semibold tracking-tight">{s.title}</h2>
-            </div>
-            <section className="mt-4 space-y-1">
-              <h3 className="text-xs text-[color:var(--color-muted)]">Idea</h3>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{s.description}</p>
-            </section>
-            <section className="mt-4 space-y-1">
-              <h3 className="text-xs text-[color:var(--color-muted)]">Motivation</h3>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{s.motivation}</p>
-            </section>
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {s.developers.map((d) => (
-                <span
-                  key={d}
-                  className="pill border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]/70 text-[color:var(--color-foreground)]"
-                >
-                  {d}
-                </span>
-              ))}
-            </div>
-            <ScoreForm token={token} submissionId={s.id} initial={initial} />
-          </li>
-        );
-      })}
-    </ol>
-  );
+  const ideas: IdeaForJudging[] = accepted.map((s) => {
+    const mine = byId.get(s.id);
+    return {
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      motivation: s.motivation,
+      developers: s.developers,
+      scored: !!mine,
+      initial: mine
+        ? {
+            impact: mine.impact,
+            demo: mine.demo,
+            pitch: mine.pitch,
+            adoptability: mine.adoptability,
+          }
+        : undefined,
+    };
+  });
+
+  return <FilterableIdeas token={token} ideas={ideas} />;
 }
 
 async function Leaderboard({
