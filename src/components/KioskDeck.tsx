@@ -4,14 +4,13 @@ import { useEffect, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { CRITERIA } from "@/lib/judging";
+import { HACKATHON_END } from "@/lib/dates";
 
 // The wireframe orb (three.js) — client-only, same component the home hero uses.
 const Hero3D = dynamic(() => import("./Hero3D").then((m) => m.Hero3D), {
   ssr: false,
   loading: () => null,
 });
-
-const HACKATHON_MS = 24 * 60 * 60 * 1000; // 24-hour countback
 
 type Bucket = { label: string; icon: string; count: number };
 
@@ -256,30 +255,9 @@ function CountUp({ value, color }: { value: number; color: string }) {
   );
 }
 
-// Anchors the 24h countback to the first time the screen is opened (stored in
-// localStorage so it survives the periodic auto-reloads). Open /screen?reset to
-// re-arm it at the real start time.
+// "Time remaining" counts down to HACKATHON_END (pencils-down).
 function useHackathonEnd(): number | null {
-  const [endTs, setEndTs] = useState<number | null>(null);
-  useEffect(() => {
-    const KEY = "hackathon-start-ts";
-    try {
-      const params = new URLSearchParams(window.location.search);
-      let start = Number(localStorage.getItem(KEY));
-      if (params.has("reset") || !start || Number.isNaN(start)) {
-        start = Date.now();
-        localStorage.setItem(KEY, String(start));
-        if (params.has("reset")) {
-          // Drop the query param so the 5-min auto-reload doesn't keep resetting.
-          window.history.replaceState(null, "", window.location.pathname);
-        }
-      }
-      setEndTs(start + HACKATHON_MS);
-    } catch {
-      setEndTs(Date.now() + HACKATHON_MS);
-    }
-  }, []);
-  return endTs;
+  return HACKATHON_END.getTime();
 }
 
 function Countdown24({ endTs }: { endTs: number | null }) {

@@ -4,6 +4,8 @@ export const TZ = "Asia/Jerusalem";
 
 export const SUBMISSION_DEADLINE = fromZonedTime("2026-06-07 23:59:59", TZ);
 export const HACKATHON_DAY = fromZonedTime("2026-06-09 09:00:00", TZ);
+// Pencils-down — the kiosk's "Time remaining" counts down to this.
+export const HACKATHON_END = fromZonedTime("2026-06-10 04:00:00", TZ);
 export const JUDGING_DAY = fromZonedTime("2026-06-11 09:00:00", TZ);
 
 export function submissionsOpen(now: Date = new Date()): boolean {
