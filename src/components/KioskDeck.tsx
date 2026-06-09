@@ -451,49 +451,110 @@ function Numbers({
 
 function Sdlc({ buckets }: { buckets: Bucket[] }) {
   const max = Math.max(1, ...buckets.map((b) => b.count));
+  const total = buckets.reduce((s, b) => s + b.count, 0);
+  const topCount = Math.max(...buckets.map((b) => b.count));
+
   return (
     <div>
-      <h2
-        className="text-center text-[color:var(--color-muted)] uppercase tracking-[0.25em]"
-        style={{ fontSize: "clamp(1rem,2.5vw,1.6rem)" }}
-      >
-        Ideas by SDLC stage
-      </h2>
-      <div className="mt-10 space-y-4">
-        {buckets.map((b, idx) => (
-          <motion.div
-            key={b.label}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="flex items-center gap-5"
-          >
-            <div
-              className="w-72 shrink-0 flex items-center gap-3"
-              style={{ fontSize: "clamp(1rem,2vw,1.6rem)" }}
+      <div className="text-center">
+        <h2
+          className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
+          style={{ fontSize: "clamp(0.85rem,1.6vw,1.2rem)" }}
+        >
+          Ideas by SDLC stage
+        </h2>
+        <p
+          className="mt-2 text-[color:var(--color-foreground)]/85"
+          style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}
+        >
+          <span className="font-bold gradient-text tabular-nums">{total}</span>{" "}
+          ideas across the lifecycle
+        </p>
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+        {buckets.map((b, idx) => {
+          const pct = (b.count / max) * 100;
+          const isTop = b.count === topCount && b.count > 0;
+          return (
+            <motion.div
+              key={b.label}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.08, ease: [0.2, 0.8, 0.2, 1] }}
+              className={`relative card overflow-hidden ${
+                isTop ? "glow-ring" : ""
+              }`}
             >
-              <span>{b.icon}</span>
-              <span className="truncate">{b.label}</span>
-            </div>
-            <div className="flex-1 h-6 rounded-full bg-[color:var(--color-surface-2)] overflow-hidden">
+              {/* glow fill — width tracks the count */}
               <motion.div
-                className="h-full rounded-full"
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 left-0"
                 initial={{ width: 0 }}
-                animate={{ width: `${(b.count / max) * 100}%` }}
-                transition={{ delay: 0.2 + idx * 0.1, duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
+                animate={{ width: `${pct}%` }}
+                transition={{
+                  delay: 0.2 + idx * 0.08,
+                  duration: 1,
+                  ease: [0.2, 0.8, 0.2, 1],
+                }}
                 style={{
-                  background: "linear-gradient(to right, var(--color-accent-2), var(--color-accent))",
+                  background:
+                    "linear-gradient(90deg, color-mix(in oklab, var(--color-accent-2) 28%, transparent), color-mix(in oklab, var(--color-accent-2) 6%, transparent) 65%, transparent)",
                 }}
               />
-            </div>
-            <div
-              className="w-12 text-right tabular-nums font-semibold"
-              style={{ fontSize: "clamp(1.2rem,2.5vw,2rem)" }}
-            >
-              {b.count}
-            </div>
-          </motion.div>
-        ))}
+
+              {isTop && (
+                <span className="absolute top-3 right-3 pill border border-[color:var(--color-success)]/45 bg-[color:var(--color-success)]/12 text-[color:var(--color-success)] text-[10px] tracking-[0.18em] uppercase">
+                  Leading
+                </span>
+              )}
+
+              <div className="relative flex items-start gap-3 pr-16">
+                <span className="text-4xl leading-none shrink-0" aria-hidden>
+                  {b.icon}
+                </span>
+                <span
+                  className="font-semibold tracking-tight leading-tight"
+                  style={{ fontSize: "clamp(1rem,1.5vw,1.3rem)" }}
+                >
+                  {b.label}
+                </span>
+              </div>
+
+              <div className="relative mt-6 flex items-end gap-3">
+                <span
+                  className="font-bold tabular-nums gradient-text leading-none"
+                  style={{ fontSize: "clamp(2.8rem,5vw,4.5rem)" }}
+                >
+                  {b.count}
+                </span>
+                <span
+                  className="mb-2 text-[color:var(--color-muted)] uppercase tracking-[0.18em]"
+                  style={{ fontSize: "clamp(0.7rem,1vw,0.85rem)" }}
+                >
+                  {b.count === 1 ? "idea" : "ideas"}
+                </span>
+              </div>
+
+              <div className="relative mt-4 h-[3px] rounded-full bg-[color:var(--color-surface-2)] overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{
+                    delay: 0.3 + idx * 0.08,
+                    duration: 1.2,
+                    ease: [0.2, 0.8, 0.2, 1],
+                  }}
+                  style={{
+                    background:
+                      "linear-gradient(to right, var(--color-accent-2), var(--color-accent))",
+                  }}
+                />
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
