@@ -115,7 +115,7 @@ export function ScoreForm({
               >
                 <input type="hidden" name={c.key} value={val ?? ""} />
 
-                <div className="flex items-center justify-between gap-4 flex-wrap pl-5 pr-3 py-3">
+                <div className="flex items-center gap-5 sm:gap-6 flex-wrap pl-5 pr-3 py-3">
                   {/* left: icon disc + label + status */}
                   <div className="flex items-center gap-3 min-w-0">
                     <div
