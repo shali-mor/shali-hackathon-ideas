@@ -67,6 +67,7 @@ export function KioskDeck({
   const endTs = useHackathonEnd();
   const slides: { key: string; node: ReactNode }[] = [
     { key: "welcome", node: <Welcome endTs={endTs} /> },
+    { key: "slack", node: <SlackInfo /> },
     {
       key: "numbers",
       node: <Numbers participants={participants} ideas={ideas} accepted={accepted} />,
@@ -381,6 +382,124 @@ function Welcome({ endTs }: { endTs: number | null }) {
         <Countdown24 endTs={endTs} />
       </motion.div>
     </div>
+  );
+}
+
+function SlackInfo() {
+  return (
+    <div className="text-center">
+      <motion.h2
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.05 }}
+        className="text-[color:var(--color-muted)] uppercase tracking-[0.3em]"
+        style={{ fontSize: "clamp(0.85rem,1.6vw,1.2rem)" }}
+      >
+        Join the conversation
+      </motion.h2>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, ease: [0.2, 0.8, 0.2, 1] }}
+        className="mt-6 flex items-center justify-center gap-4 flex-wrap"
+      >
+        <SlackMark />
+        <h1
+          className="font-bold tracking-tight gradient-text leading-none"
+          style={{ fontSize: "clamp(2rem,6.5vw,5rem)" }}
+        >
+          #sdlc-hackathon
+        </h1>
+      </motion.div>
+
+      <motion.p
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="mt-8 text-[color:var(--color-foreground)]/85"
+        style={{ fontSize: "clamp(1.1rem,2.2vw,1.8rem)" }}
+      >
+        Slack channel — <span className="font-semibold">free to join</span>, open to everyone.
+      </motion.p>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-5"
+      >
+        <SlackPanel
+          icon="📣"
+          title="Instructions"
+          body="Live updates and announcements throughout the day."
+        />
+        <SlackPanel
+          icon="❓"
+          title="Q&A"
+          body="Stuck on something? Ask — organisers and peers are watching."
+        />
+        <SlackPanel
+          icon="🤝"
+          title="Find a team"
+          body="Solo idea? Looking to join one? Post in the channel."
+        />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.75 }}
+        className="mt-8 flex items-center justify-center gap-2.5"
+      >
+        <span className="dot-live" />
+        <span
+          className="pill border border-[color:var(--color-accent)]/45 bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] uppercase tracking-[0.2em]"
+          style={{ fontSize: "clamp(0.78rem,1.2vw,1rem)" }}
+        >
+          Live throughout the hackathon
+        </span>
+      </motion.div>
+    </div>
+  );
+}
+
+function SlackPanel({ icon, title, body }: { icon: string; title: string; body: string }) {
+  return (
+    <div className="card text-left">
+      <div className="flex items-center gap-2.5">
+        <span className="text-2xl" aria-hidden>
+          {icon}
+        </span>
+        <h3 className="font-semibold tracking-tight" style={{ fontSize: "clamp(1rem,1.4vw,1.2rem)" }}>
+          {title}
+        </h3>
+      </div>
+      <p
+        className="mt-2 text-[color:var(--color-muted)] leading-snug"
+        style={{ fontSize: "clamp(0.85rem,1.1vw,1rem)" }}
+      >
+        {body}
+      </p>
+    </div>
+  );
+}
+
+function SlackMark() {
+  // Slack hash-bubble in brand colours.
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+      className="shrink-0"
+      style={{ width: "clamp(2rem,4.5vw,3.5rem)", height: "clamp(2rem,4.5vw,3.5rem)" }}
+    >
+      <path d="M5.042 15.165a2.528 2.528 0 1 1-2.52-2.52h2.52v2.52zm1.27 0a2.528 2.528 0 0 1 5.055 0v6.302a2.528 2.528 0 0 1-5.054 0v-6.302z" fill="#E01E5A" />
+      <path d="M8.84 5.042a2.528 2.528 0 1 1 2.52-2.52v2.52h-2.52zm0 1.27a2.528 2.528 0 0 1 0 5.055H2.522a2.528 2.528 0 0 1 0-5.054H8.84z" fill="#36C5F0" />
+      <path d="M18.956 8.834a2.528 2.528 0 1 1 2.52 2.52h-2.52V8.834zm-1.27 0a2.528 2.528 0 0 1-5.054 0V2.522a2.528 2.528 0 1 1 5.055 0V8.84z" fill="#2EB67D" />
+      <path d="M15.165 18.956a2.528 2.528 0 1 1-2.52 2.52v-2.52h2.52zm0-1.27a2.528 2.528 0 0 1 0-5.054h6.318a2.528 2.528 0 0 1 0 5.055h-6.318z" fill="#ECB22E" />
+    </svg>
   );
 }
 
