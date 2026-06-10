@@ -169,7 +169,27 @@ export function FilterableIdeas({
                 </div>
               </details>
 
-              <ScoreForm token={token} submissionId={s.id} initial={s.initial} />
+              <details className="mt-2 group/score">
+                <summary className="cursor-pointer list-none inline-flex items-center gap-1.5 text-xs text-[color:var(--color-muted)] hover:text-[color:var(--color-foreground)] transition">
+                  <span className="inline-block transition group-open/score:rotate-90">▸</span>
+                  {s.scored ? (
+                    <>
+                      <span className="group-open/score:hidden">Edit your scores</span>
+                      <span className="hidden group-open/score:inline">Hide scoring</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="group-open/score:hidden">Score this idea</span>
+                      <span className="hidden group-open/score:inline">Hide scoring</span>
+                    </>
+                  )}
+                </summary>
+                <ScoreForm
+                  token={token}
+                  submissionId={s.id}
+                  initial={s.initial}
+                />
+              </details>
             </li>
           ))}
         </ol>
