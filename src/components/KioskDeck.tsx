@@ -847,8 +847,8 @@ function Finalists({ finalists }: { finalists: Finalist[] }) {
               </span>
 
               <h3
-                className="font-semibold tracking-tight leading-snug line-clamp-3"
-                style={{ fontSize: "clamp(1.35rem,1.9vw,2.3rem)" }}
+                className="font-medium tracking-tight leading-snug line-clamp-3 text-[color:var(--color-foreground)]/95"
+                style={{ fontSize: "clamp(1.05rem,1.45vw,1.65rem)" }}
               >
                 {f.title}
               </h3>
