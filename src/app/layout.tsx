@@ -90,12 +90,6 @@ export default async function RootLayout({
                     🏆 Judging
                   </Link>
                   <Link
-                    href="/judges/finals"
-                    className="text-sm text-[color:var(--color-accent-2)] hover:brightness-110"
-                  >
-                    🏁 Final
-                  </Link>
-                  <Link
                     href="/screen"
                     target="_blank"
                     className="text-sm inline-flex items-center gap-1.5 text-[color:var(--color-accent-3)] hover:brightness-110"
