@@ -49,9 +49,9 @@ export default async function ScreenPage() {
     .map((a) => {
       const sub = byId.get(a.submissionId);
       if (!sub || sub.status !== "accepted") return null;
-      return { title: sub.title, team: sub.developers };
+      return { title: sub.title };
     })
-    .filter((f): f is { title: string; team: string[] } => f !== null)
+    .filter((f): f is { title: string } => f !== null)
     .slice(0, 6);
 
   return (
