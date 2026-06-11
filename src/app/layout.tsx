@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { getSession } from "@/lib/session";
@@ -17,6 +17,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Elegant display serif — used sparingly for headline moments (e.g. the
+// finalists reveal) via the --font-serif CSS variable.
+const fraunces = Fraunces({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+});
+
 export const metadata: Metadata = {
   title: "Forcepoint Hackathon — submit your idea",
   description:
@@ -32,7 +40,7 @@ export default async function RootLayout({
   const admin = isAdmin(session?.user?.email);
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <header className="sticky top-0 z-40 backdrop-blur-md bg-[color:var(--color-background)]/70 border-b border-[color:var(--color-border)]">
           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
