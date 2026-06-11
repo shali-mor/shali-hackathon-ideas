@@ -1,5 +1,6 @@
-import { db, submissions } from "@/lib/db";
+import { db, submissions, judgeScores } from "@/lib/db";
 import { computeStats, bucketByCategory } from "@/lib/insights";
+import { aggregateScores } from "@/lib/judging";
 import { KioskDeck } from "@/components/KioskDeck";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,29 @@ export default async function ScreenPage() {
   const nonRejected = rows.filter((r) => r.status !== "rejected").map((r) => r.title);
   const titles = (accepted.length ? accepted : nonRejected.length ? nonRejected : rows.map((r) => r.title));
 
+  // Finalists — the six highest-scoring ideas across all judges. Empty until
+  // judges start scoring; the kiosk reloads every few minutes so it fills in
+  // live during judging.
+  const scoreRows = await db.select().from(judgeScores).catch(() => []);
+  const ranked = aggregateScores(
+    scoreRows.map((s) => ({
+      submissionId: s.submissionId,
+      impact: s.impact,
+      demo: s.demo,
+      pitch: s.pitch,
+      adoptability: s.adoptability,
+    })),
+  );
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const finalists = ranked
+    .map((a) => {
+      const sub = byId.get(a.submissionId);
+      if (!sub || sub.status !== "accepted") return null;
+      return { title: sub.title, team: sub.developers };
+    })
+    .filter((f): f is { title: string; team: string[] } => f !== null)
+    .slice(0, 6);
+
   return (
     <KioskDeck
       participants={stats.participants}
@@ -37,6 +61,7 @@ export default async function ScreenPage() {
       accepted={stats.accepted}
       buckets={buckets}
       titles={titles}
+      finalists={finalists}
     />
   );
 }
