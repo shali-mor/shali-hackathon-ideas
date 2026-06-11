@@ -706,14 +706,14 @@ function Confetti() {
     "var(--color-accent-3)",
     "var(--color-success)",
   ];
-  const pieces = Array.from({ length: 36 }, (_, i) => i);
+  const pieces = Array.from({ length: 20 }, (_, i) => i);
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       {pieces.map((i) => {
         const left = (i * 53) % 100; // spread across the width
-        const delay = (i % 9) * 0.55;
-        const dur = 6.5 + (i % 6);
-        const w = 7 + (i % 4) * 3;
+        const delay = (i % 9) * 0.7;
+        const dur = 7.5 + (i % 6);
+        const w = 6 + (i % 4) * 3;
         const color = colors[i % colors.length];
         const spin = (i % 2 === 0 ? 1 : -1) * (240 + (i % 3) * 180);
         const drift = (i % 2 === 0 ? 1 : -1) * (20 + (i % 4) * 18);
@@ -733,7 +733,7 @@ function Confetti() {
               y: "112vh",
               x: drift,
               rotate: spin,
-              opacity: [0, 0.95, 0.95, 0],
+              opacity: [0, 0.7, 0.7, 0],
             }}
             transition={{ duration: dur, delay, repeat: Infinity, ease: "linear" }}
           />
@@ -745,104 +745,110 @@ function Confetti() {
 
 function Finalists({ finalists }: { finalists: Finalist[] }) {
   return (
-    <div>
+    <div className="mx-auto max-w-[1320px]">
       <div className="text-center">
+        {/* hairline-ruled eyebrow — calm, no emoji */}
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
+          initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="inline-flex items-center gap-3"
+          className="flex items-center justify-center gap-4"
         >
-          <motion.span
-            aria-hidden
-            animate={{ rotate: [0, -12, 12, 0], scale: [1, 1.12, 1] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-            className="leading-none"
-            style={{ fontSize: "clamp(1.4rem,2.4vw,2.6rem)" }}
-          >
-            🎉
-          </motion.span>
           <span
-            className="text-[color:var(--color-muted)] uppercase tracking-[0.34em]"
-            style={{ fontSize: "clamp(1rem,1.6vw,1.6rem)" }}
-          >
-            Congratulations
-          </span>
-          <motion.span
             aria-hidden
-            animate={{ rotate: [0, 12, -12, 0], scale: [1, 1.12, 1] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-            className="leading-none"
-            style={{ fontSize: "clamp(1.4rem,2.4vw,2.6rem)" }}
+            className="h-px w-[clamp(2rem,6vw,6rem)]"
+            style={{
+              background:
+                "linear-gradient(to right, transparent, color-mix(in oklab, var(--color-accent-2) 70%, transparent))",
+            }}
+          />
+          <span
+            className="text-[color:var(--color-muted)] uppercase tracking-[0.42em]"
+            style={{ fontSize: "clamp(0.8rem,1.2vw,1.25rem)" }}
           >
-            🏆
-          </motion.span>
+            The Finals
+          </span>
+          <span
+            aria-hidden
+            className="h-px w-[clamp(2rem,6vw,6rem)]"
+            style={{
+              background:
+                "linear-gradient(to left, transparent, color-mix(in oklab, var(--color-accent-2) 70%, transparent))",
+            }}
+          />
         </motion.div>
 
         <motion.h1
-          initial={{ opacity: 0, scale: 0.85, y: 14 }}
+          initial={{ opacity: 0, scale: 0.9, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 140, damping: 14, delay: 0.1 }}
-          className="mt-3 font-bold tracking-tight leading-none gradient-text"
-          style={{ fontSize: "clamp(3rem,8.5vw,10rem)" }}
+          transition={{ type: "spring", stiffness: 130, damping: 16, delay: 0.1 }}
+          className="mt-6 tracking-tight leading-[0.95] gradient-text"
+          style={{
+            fontFamily: "var(--font-serif), ui-serif, Georgia, serif",
+            fontWeight: 600,
+            fontSize: "clamp(2.8rem,6.5vw,7.5rem)",
+          }}
         >
           Finalists
         </motion.h1>
         <motion.p
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.28 }}
-          className="mt-4 text-[color:var(--color-foreground)]/85"
-          style={{ fontSize: "clamp(1.3rem,2.3vw,2.6rem)" }}
+          className="mt-5 text-[color:var(--color-muted)]"
+          style={{ fontSize: "clamp(1.2rem,2vw,2.2rem)" }}
         >
-          of the <span className="font-semibold gradient-text">SDLC Hackathon</span>
+          of the{" "}
+          <span className="text-[color:var(--color-foreground)] font-medium">
+            SDLC Hackathon
+          </span>
         </motion.p>
       </div>
 
-      <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
+      <div className="mt-14 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7 lg:gap-9">
         {finalists.map((f, idx) => (
           <motion.div
             key={f.title}
-            initial={{ opacity: 0, y: 34, scale: 0.92 }}
+            initial={{ opacity: 0, y: 28, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{
               type: "spring",
               stiffness: 130,
-              damping: 15,
+              damping: 16,
               delay: 0.35 + idx * 0.12,
             }}
           >
             {/* gentle continuous float — varied phase per card keeps it lively */}
             <motion.div
-              animate={{ y: [0, -9, 0] }}
+              animate={{ y: [0, -7, 0] }}
               transition={{
-                duration: 3.6 + (idx % 3) * 0.7,
+                duration: 3.8 + (idx % 3) * 0.7,
                 repeat: Infinity,
                 ease: "easeInOut",
                 delay: idx * 0.25,
               }}
-              className="relative card overflow-hidden glow-ring flex flex-col items-center justify-center text-center min-h-[clamp(9rem,17vh,13rem)] gap-4"
+              className="relative card overflow-hidden flex flex-col items-center justify-center text-center min-h-[clamp(8rem,14vh,10.5rem)] gap-4 py-9 px-7"
             >
-              {/* festive corner wash */}
+              {/* soft top wash — subtle, not a full glow ring */}
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0 -z-10"
                 style={{
                   background:
-                    "radial-gradient(circle at 50% 0%, color-mix(in oklab, var(--color-accent-2) 20%, transparent), transparent 65%)",
+                    "radial-gradient(120% 80% at 50% 0%, color-mix(in oklab, var(--color-accent-2) 12%, transparent), transparent 60%)",
                 }}
               />
 
               <span
-                className="pill border border-[color:var(--color-success)]/45 bg-[color:var(--color-success)]/12 text-[color:var(--color-success)] uppercase tracking-[0.22em]"
-                style={{ fontSize: "clamp(0.62rem,0.85vw,1rem)" }}
+                className="pill border border-[color:var(--color-success)]/40 bg-[color:var(--color-success)]/10 text-[color:var(--color-success)] uppercase tracking-[0.24em]"
+                style={{ fontSize: "clamp(0.6rem,0.8vw,0.95rem)" }}
               >
-                ★ Finalist
+                Finalist
               </span>
 
               <h3
-                className="font-bold tracking-tight leading-tight line-clamp-3 px-2"
-                style={{ fontSize: "clamp(1.45rem,2.2vw,2.7rem)" }}
+                className="font-semibold tracking-tight leading-snug line-clamp-3"
+                style={{ fontSize: "clamp(1.35rem,1.9vw,2.3rem)" }}
               >
                 {f.title}
               </h3>
