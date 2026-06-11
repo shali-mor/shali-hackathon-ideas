@@ -2,13 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
-import { db, judgeScores } from "@/lib/db";
+import { db, judgeScores, finalScores } from "@/lib/db";
 import { verifyJudgeToken, type JudgePayload } from "@/lib/judge-tokens";
 import { CRITERIA, SCORE_MIN, SCORE_MAX } from "@/lib/judging";
 import { getSession } from "@/lib/session";
 import { isAdmin } from "@/lib/admin";
 
 export type ScoreState = { ok: boolean; error?: string } | null;
+
+// The two scoring rounds live in separate tables and revalidate separate
+// pages. The score form posts a `round` field; anything other than "final"
+// (including absent) means the semi-final round, for backward compatibility.
+function roundTarget(formData: FormData) {
+  const round = String(formData.get("round") ?? "semi");
+  return round === "final"
+    ? { table: finalScores, path: "/judges/finals" }
+    : { table: judgeScores, path: "/judges" };
+}
 
 // Judges authenticate via their signed link token; admins can also act as
 // judges using their normal signed-in session (no token needed).
@@ -47,8 +57,10 @@ export async function saveScore(
     values[c.key] = n;
   }
 
+  const { table, path } = roundTarget(formData);
+
   await db
-    .insert(judgeScores)
+    .insert(table)
     .values({
       submissionId,
       judgeEmail: judge.email.toLowerCase(),
@@ -59,7 +71,7 @@ export async function saveScore(
       adoptability: values.adoptability,
     })
     .onConflictDoUpdate({
-      target: [judgeScores.judgeEmail, judgeScores.submissionId],
+      target: [table.judgeEmail, table.submissionId],
       set: {
         impact: values.impact,
         demo: values.demo,
@@ -70,7 +82,7 @@ export async function saveScore(
       },
     });
 
-  revalidatePath("/judges");
+  revalidatePath(path);
   return { ok: true };
 }
 
@@ -84,15 +96,17 @@ export async function clearScore(
   const submissionId = String(formData.get("submissionId") ?? "");
   if (!submissionId) return { ok: false, error: "Missing idea." };
 
+  const { table, path } = roundTarget(formData);
+
   await db
-    .delete(judgeScores)
+    .delete(table)
     .where(
       and(
-        eq(judgeScores.judgeEmail, judge.email.toLowerCase()),
-        eq(judgeScores.submissionId, submissionId),
+        eq(table.judgeEmail, judge.email.toLowerCase()),
+        eq(table.submissionId, submissionId),
       ),
     );
 
-  revalidatePath("/judges");
+  revalidatePath(path);
   return { ok: true };
 }

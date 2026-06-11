@@ -83,6 +83,34 @@ export const judgeScores = pgTable(
 
 export type JudgeScore = typeof judgeScores.$inferSelect;
 
+// Final round — a separate scoring pass over the top finalists only, kept in
+// its own table so it never collides with (or overwrites) the semi-final
+// scores in judge_scores. Same shape, same one-row-per-(judge, submission).
+export const finalScores = pgTable(
+  "final_scores",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    submissionId: uuid("submission_id")
+      .notNull()
+      .references(() => submissions.id, { onDelete: "cascade" }),
+    judgeEmail: text("judge_email").notNull(),
+    judgeName: text("judge_name"),
+    impact: integer("impact").notNull(),
+    demo: integer("demo").notNull(),
+    pitch: integer("pitch").notNull(),
+    adoptability: integer("adoptability").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [unique("final_scores_judge_submission").on(t.judgeEmail, t.submissionId)],
+);
+
+export type FinalScore = typeof finalScores.$inferSelect;
+
 // Auth.js v5 / drizzle adapter tables -----------------------------------
 
 export const users = pgTable("user", {

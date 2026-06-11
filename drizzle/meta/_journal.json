@@ -36,6 +36,13 @@
       "when": 1780646085198,
       "tag": "0004_fat_power_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781158553337,
+      "tag": "0005_tough_moondragon",
+      "breakpoints": true
     }
   ]
 }
