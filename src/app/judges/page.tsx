@@ -97,7 +97,7 @@ export default async function JudgesPage({
 
       <nav className="flex items-center gap-2">
         <Tab href={scoreHref} active={!showResults} label="Score ideas" />
-        <Tab href={resultsHref} active={showResults} label="🏆 Leaderboard" />
+        <Tab href={resultsHref} active={showResults} label="🏆 Semi-final leaderboard" />
       </nav>
 
       {showResults ? (
