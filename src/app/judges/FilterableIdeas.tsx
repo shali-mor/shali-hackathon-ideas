@@ -17,9 +17,11 @@ export type IdeaForJudging = {
 export function FilterableIdeas({
   token,
   ideas,
+  round = "semi",
 }: {
   token: string;
   ideas: IdeaForJudging[];
+  round?: "semi" | "final";
 }) {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "unscored" | "scored">("all");
@@ -188,6 +190,7 @@ export function FilterableIdeas({
                   token={token}
                   submissionId={s.id}
                   initial={s.initial}
+                  round={round}
                 />
               </details>
             </li>

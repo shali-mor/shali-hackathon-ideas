@@ -57,10 +57,12 @@ export function ScoreForm({
   token,
   submissionId,
   initial,
+  round = "semi",
 }: {
   token: string;
   submissionId: string;
   initial?: Partial<CriterionScores>;
+  round?: "semi" | "final";
 }) {
   const [scores, setScores] = useState<Partial<CriterionScores>>(initial ?? {});
   const [hovered, setHovered] = useState<{ key: CriterionKey; value: number } | null>(null);
@@ -88,6 +90,7 @@ export function ScoreForm({
       <form action={saveAction}>
         <input type="hidden" name="token" value={token} />
         <input type="hidden" name="submissionId" value={submissionId} />
+        <input type="hidden" name="round" value={round} />
 
         <div className="space-y-3">
           {CRITERIA.map((c) => {
@@ -277,6 +280,7 @@ export function ScoreForm({
         >
           <input type="hidden" name="token" value={token} />
           <input type="hidden" name="submissionId" value={submissionId} />
+          <input type="hidden" name="round" value={round} />
           <button
             type="submit"
             disabled={clearing}
