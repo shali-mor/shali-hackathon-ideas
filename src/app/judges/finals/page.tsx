@@ -124,7 +124,7 @@ export default async function FinalsPage({
         <>
           <nav className="flex items-center gap-2">
             <Tab href={scoreHref} active={!showResults} label="Score finalists" />
-            <Tab href={resultsHref} active={showResults} label="🏆 Leaderboard" />
+            <Tab href={resultsHref} active={showResults} label="🏆 Final leaderboard" />
           </nav>
 
           {showResults ? (
