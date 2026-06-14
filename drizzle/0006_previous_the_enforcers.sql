@@ -1,0 +1,1 @@
+ALTER TABLE "submissions" ADD COLUMN "needs_immediate_impl" boolean DEFAULT false NOT NULL;

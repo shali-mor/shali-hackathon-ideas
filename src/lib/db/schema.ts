@@ -42,6 +42,9 @@ export const submissions = pgTable("submissions", {
   submittedByEmail: text("submitted_by_email").notNull(),
   submittedByName: text("submitted_by_name"),
   status: submissionStatus("status").notNull().default("pending"),
+  // Set by an admin from the semi-final leaderboard to mark ideas that
+  // shouldn't wait for the regular roadmap — implement now.
+  needsImmediateImpl: boolean("needs_immediate_impl").notNull().default(false),
   reviewNote: text("review_note"),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true, mode: "date" }),
   reviewedByEmail: text("reviewed_by_email"),

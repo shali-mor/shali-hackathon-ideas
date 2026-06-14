@@ -85,6 +85,25 @@ export async function reopenSubmission(formData: FormData): Promise<void> {
   revalidatePath("/my-submissions");
 }
 
+export async function toggleImmediateImpl(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!isAdmin(session?.user?.email)) throw new Error("Forbidden");
+  const id = String(formData.get("id") ?? "");
+  const next = formData.get("next") === "true";
+  if (!id) return;
+
+  await db
+    .update(submissions)
+    .set({ needsImmediateImpl: next, updatedAt: new Date() })
+    .where(eq(submissions.id, id));
+
+  revalidatePath("/admin");
+  revalidatePath("/ideas");
+  revalidatePath(`/ideas/${id}`);
+  revalidatePath("/judges");
+  revalidatePath("/my-submissions");
+}
+
 export async function adminDeleteSubmission(formData: FormData): Promise<void> {
   const session = await getSession();
   if (!isAdmin(session?.user?.email)) throw new Error("Forbidden");
