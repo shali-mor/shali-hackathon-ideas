@@ -4,7 +4,11 @@ import { desc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db, submissions, judgeScores } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
-import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
+import {
+  StatusBadge,
+  TeamNeededBadge,
+  ImmediateImplBadge,
+} from "@/components/StatusBadge";
 import { aggregateScores, type ScoreRow } from "@/lib/judging";
 import {
   acceptSubmission,
@@ -176,6 +180,7 @@ export default async function AdminPage({
                     </Link>
                     <StatusBadge status={s.status} />
                     {s.teamNeeded && <TeamNeededBadge />}
+                    {s.needsImmediateImpl && <ImmediateImplBadge />}
                   </div>
                   <p className="mt-1 text-xs text-[color:var(--color-muted)]">
                     {s.submittedByName ?? s.submittedByEmail} · contact {s.teamContact}

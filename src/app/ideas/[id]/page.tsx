@@ -3,7 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, submissions } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { StatusBadge, TeamNeededBadge } from "@/components/StatusBadge";
+import {
+  StatusBadge,
+  TeamNeededBadge,
+  ImmediateImplBadge,
+} from "@/components/StatusBadge";
 import { isAdmin } from "@/lib/admin";
 import { submissionsOpenFor } from "@/lib/dates";
 import { categoryDisplay } from "@/lib/insights";
@@ -35,6 +39,7 @@ export default async function IdeaDetailPage({
         <div className="flex items-center gap-3 flex-wrap">
           <StatusBadge status={idea.status} />
           {idea.teamNeeded && <TeamNeededBadge />}
+          {idea.needsImmediateImpl && <ImmediateImplBadge />}
           {(() => {
             const c = categoryDisplay(idea.category, idea.categoryOther);
             return (

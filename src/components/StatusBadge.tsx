@@ -23,6 +23,18 @@ export function StatusBadge({ status }: { status: Status }) {
   );
 }
 
+export function ImmediateImplBadge() {
+  return (
+    <span
+      className="pill border bg-[color:var(--color-danger)]/15 text-[color:var(--color-danger)] border-[color:var(--color-danger)]/45 uppercase tracking-[0.15em]"
+      title="Marked for immediate implementation — don't wait for the regular roadmap."
+      style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
+    >
+      ⚡ Implement now
+    </span>
+  );
+}
+
 export function TeamNeededBadge() {
   return (
     <span

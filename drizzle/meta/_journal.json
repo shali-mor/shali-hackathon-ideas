@@ -43,6 +43,13 @@
       "when": 1781158553337,
       "tag": "0005_tough_moondragon",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781436104372,
+      "tag": "0006_previous_the_enforcers",
+      "breakpoints": true
     }
   ]
 }

@@ -67,6 +67,9 @@ export default async function JudgesPage({
 
   const semiScores = showResults ? await db.select().from(judgeScores) : [];
   const titleById = new Map(accepted.map((s) => [s.id, s.title]));
+  const flagsById = new Map(
+    accepted.map((s) => [s.id, s.needsImmediateImpl]),
+  );
 
   return (
     <div className="space-y-8">
@@ -101,7 +104,12 @@ export default async function JudgesPage({
       </nav>
 
       {showResults ? (
-        <Leaderboard scores={semiScores} titleById={titleById} />
+        <Leaderboard
+          scores={semiScores}
+          titleById={titleById}
+          flagsById={flagsById}
+          canToggleFlag={isSignedInAdmin}
+        />
       ) : (
         <ScoringList token={token ?? ""} judgeEmail={me.email} accepted={accepted} />
       )}

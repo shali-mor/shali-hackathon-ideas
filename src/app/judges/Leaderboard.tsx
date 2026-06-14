@@ -4,6 +4,8 @@ import {
   weightedTotal,
   type ScoreRow,
 } from "@/lib/judging";
+import { ImmediateImplBadge } from "@/components/StatusBadge";
+import { toggleImmediateImpl } from "@/app/admin/actions";
 
 // Raw per-(judge, submission) score row — the shape shared by both the
 // semi-final (judge_scores) and final (final_scores) tables.
@@ -25,11 +27,17 @@ export function Leaderboard({
   titleById,
   intro,
   emptyHint,
+  flagsById,
+  canToggleFlag = false,
 }: {
   scores: RawScore[];
   titleById: Map<string, string>;
   intro?: string;
   emptyHint?: string;
+  /** submissionId → needs_immediate_impl */
+  flagsById?: Map<string, boolean>;
+  /** When true, render the "⚡ Implement now" toggle (admin-only). */
+  canToggleFlag?: boolean;
 }) {
   const rows: ScoreRow[] = scores.map((s) => ({
     submissionId: s.submissionId,
@@ -71,12 +79,23 @@ export function Leaderboard({
           const podium = rank <= 3;
           const judgeRows = byIdea.get(a.submissionId) ?? [];
           const title = titleById.get(a.submissionId) ?? "(unknown idea)";
+          const flagged = flagsById?.get(a.submissionId) ?? false;
           return (
             <li
               key={a.submissionId}
               className={`card relative overflow-hidden ${
                 rank === 1 ? "glow-ring" : ""
               }`}
+              style={
+                flagged
+                  ? {
+                      borderColor:
+                        "color-mix(in oklab, var(--color-danger) 55%, var(--color-border))",
+                      boxShadow:
+                        "inset 4px 0 0 0 var(--color-danger), 0 0 0 1px color-mix(in oklab, var(--color-danger) 18%, transparent)",
+                    }
+                  : undefined
+              }
             >
               {/* gradient wash for the podium */}
               {podium && (
@@ -105,9 +124,12 @@ export function Leaderboard({
                 {/* main content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
-                      {title}
-                    </h2>
+                    <div className="min-w-0 flex items-center gap-2 flex-wrap">
+                      <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
+                        {title}
+                      </h2>
+                      {flagged && <ImmediateImplBadge />}
+                    </div>
                     <div className="text-right shrink-0">
                       <div className="flex items-baseline gap-1.5">
                         <span className="text-3xl sm:text-4xl font-bold tabular-nums gradient-text leading-none">
@@ -122,6 +144,39 @@ export function Leaderboard({
                       </div>
                     </div>
                   </div>
+
+                  {canToggleFlag && (
+                    <form action={toggleImmediateImpl} className="mt-3">
+                      <input type="hidden" name="id" value={a.submissionId} />
+                      <input
+                        type="hidden"
+                        name="next"
+                        value={flagged ? "false" : "true"}
+                      />
+                      <button
+                        type="submit"
+                        className="inline-flex items-center gap-2 rounded-md text-xs font-medium px-2.5 py-1.5 border transition"
+                        style={{
+                          borderColor: flagged
+                            ? "color-mix(in oklab, var(--color-danger) 55%, transparent)"
+                            : "var(--color-border)",
+                          background: flagged
+                            ? "color-mix(in oklab, var(--color-danger) 14%, transparent)"
+                            : "color-mix(in oklab, white 3%, transparent)",
+                          color: flagged
+                            ? "var(--color-danger)"
+                            : "var(--color-muted)",
+                        }}
+                      >
+                        <span aria-hidden>⚡</span>
+                        <span>
+                          {flagged
+                            ? "Marked for immediate implementation — undo"
+                            : "Mark for immediate implementation"}
+                        </span>
+                      </button>
+                    </form>
+                  )}
 
                   {/* weighted progress bar */}
                   <div className="mt-3 h-1.5 rounded-full bg-[color:var(--color-surface-2)] overflow-hidden">
