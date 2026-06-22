@@ -12,6 +12,7 @@ import {
   type CategoryKey,
 } from "@/lib/insights";
 import { ImmediateImplBadge } from "@/components/StatusBadge";
+import { togglePickedForQuarter } from "@/app/admin/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,9 @@ function findPromotion(title: string): Promotion | undefined {
 
 type Card = {
   key: string;
+  /** Real submission id when this card is backed by the DB; null for
+   *  synthetic strategic items (no toggle UI). */
+  submissionId: string | null;
   title: string;
   summary: string;
   category: CategoryKey;
@@ -77,6 +81,7 @@ type Card = {
   developers?: string[];
   needsImmediateImpl?: boolean;
   pinned?: boolean;
+  pickedForQuarter?: boolean;
   shortId?: string;
 };
 
@@ -114,6 +119,7 @@ export default async function RoadmapPage() {
       const promo = findPromotion(s.title);
       return {
         key: s.id,
+        submissionId: s.id,
         title: promo?.title ?? s.title,
         summary: promo?.summary ?? summarise(s.description),
         category: (s.category as CategoryKey) ?? "other",
@@ -121,32 +127,47 @@ export default async function RoadmapPage() {
         developers: s.developers,
         needsImmediateImpl: s.needsImmediateImpl,
         pinned: !!promo,
+        pickedForQuarter: s.pickedForQuarter,
         shortId: s.id.slice(0, 4).toUpperCase(),
       };
     });
 
-  // Group: pinned (strategic + promoted) at the top of their stage, then
-  // the remaining submissions in chronological order.
+  // Group + sort within each stage:
+  //   1. Strategic pinned items (always considered "in quarter")
+  //   2. Picked-for-quarter submissions
+  //   3. Unpicked submissions (greyed out)
   const cardsByStage = new Map<CategoryKey, Card[]>();
+  const pushTo = (k: CategoryKey, c: Card) => {
+    const list = cardsByStage.get(k) ?? [];
+    list.push(c);
+    cardsByStage.set(k, list);
+  };
   for (const e of EXTRA_SKILLS) {
-    const list = cardsByStage.get(e.category) ?? [];
-    list.push({ ...e, pinned: true });
-    cardsByStage.set(e.category, list);
+    pushTo(e.category, {
+      ...e,
+      submissionId: null,
+      pinned: true,
+      pickedForQuarter: true,
+    });
   }
-  for (const c of submitted.filter((s) => s.pinned)) {
-    const list = cardsByStage.get(c.category) ?? [];
-    list.push(c);
-    cardsByStage.set(c.category, list);
+  for (const c of submitted.filter((s) => s.pinned && s.pickedForQuarter)) {
+    pushTo(c.category, c);
   }
-  for (const c of submitted.filter((s) => !s.pinned)) {
-    const list = cardsByStage.get(c.category) ?? [];
-    list.push(c);
-    cardsByStage.set(c.category, list);
+  for (const c of submitted.filter((s) => !s.pinned && s.pickedForQuarter)) {
+    pushTo(c.category, c);
+  }
+  for (const c of submitted.filter((s) => s.pinned && !s.pickedForQuarter)) {
+    pushTo(c.category, c);
+  }
+  for (const c of submitted.filter((s) => !s.pinned && !s.pickedForQuarter)) {
+    pushTo(c.category, c);
   }
 
   const stages = CATEGORY_ORDER.filter((k) => (cardsByStage.get(k)?.length ?? 0) > 0);
   const total = submitted.length + EXTRA_SKILLS.length;
   const immediateCount = submitted.filter((c) => c.needsImmediateImpl).length;
+  const pickedCount =
+    EXTRA_SKILLS.length + submitted.filter((c) => c.pickedForQuarter).length;
 
   let cardIndex = 0;
 
@@ -173,10 +194,14 @@ export default async function RoadmapPage() {
               <span className="tabular-nums font-semibold text-[color:var(--color-foreground)]">
                 {EXTRA_SKILLS.length}
               </span>{" "}
-              strategic additions. Each card is a commitment for the coming quarter.
+              strategic additions. Pick the ones to build this quarter — picks
+              float up, the rest sink and grey out.
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <span className="pill border border-[color:var(--color-success)]/45 bg-[color:var(--color-success)]/12 text-[color:var(--color-success)] font-semibold">
+              <span className="tabular-nums">{pickedCount}</span> / {total} picked
+            </span>
             <span className="pill border border-[color:var(--color-border)] bg-[color:var(--color-surface-2)]/70 text-[color:var(--color-muted)]">
               <span className="tabular-nums">{stages.length}</span> stages
             </span>
@@ -250,11 +275,24 @@ export default async function RoadmapPage() {
                     {meta.label}
                   </h2>
                 </div>
-                <div className="ml-auto text-sm text-[color:var(--color-muted)]">
-                  <span className="tabular-nums font-semibold text-[color:var(--color-foreground)]">
-                    {list.length}
-                  </span>{" "}
-                  skill{list.length === 1 ? "" : "s"}
+                <div className="ml-auto text-sm text-[color:var(--color-muted)] flex items-center gap-2 flex-wrap justify-end">
+                  <span
+                    className="pill border tabular-nums text-xs font-semibold"
+                    style={{
+                      borderColor: `color-mix(in oklab, ${color} 45%, transparent)`,
+                      background: `color-mix(in oklab, ${color} 12%, transparent)`,
+                      color,
+                    }}
+                  >
+                    {list.filter((c) => c.pickedForQuarter).length} picked
+                  </span>
+                  <span>
+                    /{" "}
+                    <span className="tabular-nums text-[color:var(--color-foreground)] font-semibold">
+                      {list.length}
+                    </span>{" "}
+                    skill{list.length === 1 ? "" : "s"}
+                  </span>
                 </div>
               </header>
 
@@ -302,6 +340,21 @@ export default async function RoadmapPage() {
           />
           Marked for immediate implementation
         </span>
+        <span className="inline-flex items-center gap-2">
+          <span
+            aria-hidden
+            className="w-2.5 h-2.5 rounded-full"
+            style={{ background: "var(--color-success)" }}
+          />
+          Picked for this quarter
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span
+            aria-hidden
+            className="w-2.5 h-2.5 rounded-full border border-[color:var(--color-muted)]/50"
+          />
+          Unpicked — greyed and sunk below
+        </span>
         <Link
           href="/admin"
           className="ml-auto text-[color:var(--color-muted)] hover:text-[color:var(--color-foreground)] underline underline-offset-2"
@@ -325,36 +378,46 @@ function SkillCard({
   const display = categoryDisplay(card.category, card.categoryOther);
   const flagged = card.needsImmediateImpl;
   const pinned = card.pinned;
+  const picked = !!card.pickedForQuarter;
   return (
     <div
       className="relative overflow-hidden rounded-xl border bg-[color:var(--color-surface)]/40 p-5 transition hover:bg-[color:var(--color-surface)]/60"
       style={{
-        borderColor: flagged
+        borderColor: !picked
+          ? "color-mix(in oklab, var(--color-border) 90%, transparent)"
+          : flagged
           ? "color-mix(in oklab, var(--color-danger) 55%, var(--color-border))"
           : pinned
           ? `color-mix(in oklab, ${color} 45%, var(--color-border))`
           : "var(--color-border)",
-        boxShadow: flagged
+        boxShadow: !picked
+          ? "inset 4px 0 0 0 color-mix(in oklab, white 10%, transparent)"
+          : flagged
           ? `inset 4px 0 0 0 var(--color-danger)`
           : `inset 4px 0 0 0 color-mix(in oklab, ${color} ${pinned ? 80 : 30}%, transparent)`,
+        opacity: picked ? 1 : 0.55,
+        filter: picked ? undefined : "grayscale(0.85)",
       }}
     >
-      {/* faint stage wash */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background: `radial-gradient(circle at 0% 0%, color-mix(in oklab, ${color} 10%, transparent), transparent 70%)`,
-        }}
-      />
+      {picked && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background: `radial-gradient(circle at 0% 0%, color-mix(in oklab, ${color} 10%, transparent), transparent 70%)`,
+          }}
+        />
+      )}
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <span
             className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold tabular-nums shrink-0"
             style={{
-              background: `linear-gradient(135deg, ${color}, color-mix(in oklab, ${color} 65%, var(--color-accent-2)))`,
-              color: "var(--color-background)",
+              background: picked
+                ? `linear-gradient(135deg, ${color}, color-mix(in oklab, ${color} 65%, var(--color-accent-2)))`
+                : "color-mix(in oklab, white 12%, transparent)",
+              color: picked ? "var(--color-background)" : "var(--color-muted)",
             }}
           >
             {n}
@@ -381,12 +444,26 @@ function SkillCard({
             </span>
           )}
           {flagged && <ImmediateImplBadge />}
+          {picked && !pinned && (
+            <span
+              className="pill border text-[10px] uppercase tracking-[0.18em]"
+              style={{
+                borderColor:
+                  "color-mix(in oklab, var(--color-success) 55%, transparent)",
+                background:
+                  "color-mix(in oklab, var(--color-success) 14%, transparent)",
+                color: "var(--color-success)",
+              }}
+            >
+              ✓ In quarter
+            </span>
+          )}
         </div>
       </div>
 
       <div
         className="mt-3 text-[10px] uppercase tracking-[0.2em] font-semibold"
-        style={{ color }}
+        style={{ color: picked ? color : "var(--color-muted)" }}
       >
         {display.label} · Skill
       </div>
@@ -416,11 +493,50 @@ function SkillCard({
         </div>
       )}
 
-      {card.shortId && (
-        <div className="mt-3 text-[10px] tabular-nums text-[color:var(--color-muted)]/60 font-mono">
-          ID · {card.shortId}
+      {/* Footer: short id + pick toggle. The synthetic strategic card has
+          no submissionId and stays implicitly picked (no toggle). */}
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="text-[10px] tabular-nums text-[color:var(--color-muted)]/60 font-mono">
+          {card.shortId ? `ID · ${card.shortId}` : ""}
         </div>
-      )}
+        {card.submissionId ? (
+          <form action={togglePickedForQuarter}>
+            <input type="hidden" name="id" value={card.submissionId} />
+            <input
+              type="hidden"
+              name="next"
+              value={picked ? "false" : "true"}
+            />
+            <button
+              type="submit"
+              className="text-[11px] font-medium px-2.5 py-1 rounded-md border transition"
+              style={
+                picked
+                  ? {
+                      borderColor:
+                        "color-mix(in oklab, var(--color-success) 50%, transparent)",
+                      background:
+                        "color-mix(in oklab, var(--color-success) 14%, transparent)",
+                      color: "var(--color-success)",
+                    }
+                  : {
+                      borderColor:
+                        "color-mix(in oklab, var(--color-accent-2) 45%, transparent)",
+                      background:
+                        "color-mix(in oklab, var(--color-accent-2) 12%, transparent)",
+                      color: "var(--color-accent-2)",
+                    }
+              }
+            >
+              {picked ? "✓ Picked — undo" : "+ Pick for quarter"}
+            </button>
+          </form>
+        ) : (
+          <span className="text-[11px] text-[color:var(--color-muted)] italic">
+            Always in quarter
+          </span>
+        )}
+      </div>
     </div>
   );
 }
