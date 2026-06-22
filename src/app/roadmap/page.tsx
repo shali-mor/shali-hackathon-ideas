@@ -34,14 +34,6 @@ type SyntheticSkill = {
 
 const EXTRA_SKILLS: SyntheticSkill[] = [
   {
-    key: "classifier-rules",
-    title: "Classifier Rules",
-    summary:
-      "A reusable AI skill that generates and tunes DLP/CPS classifier rules (regex, dictionaries, scoring) from natural-language examples — turning new policy intent into shippable detection without hand-crafted patterns.",
-    category: "development",
-    pinned: true,
-  },
-  {
     key: "skill-reviewer",
     title: "Skill Reviewer",
     summary:
@@ -51,6 +43,30 @@ const EXTRA_SKILLS: SyntheticSkill[] = [
     pinned: true,
   },
 ];
+
+// Submissions to promote with strategic styling on the roadmap. Lets us
+// merge a submitted idea with a strategic ask so we don't end up with two
+// near-duplicate cards. Match on title (case-insensitive). Optional `summary`
+// overrides the auto-derived one-liner; optional `title` rebrands the card.
+type Promotion = {
+  match: string; // submission title (case-insensitive)
+  title?: string;
+  summary?: string;
+};
+
+const PROMOTIONS: Promotion[] = [
+  {
+    match: "New Classifier Skill",
+    title: "Classifier Rules",
+    summary:
+      "A reusable AI skill that generates and tunes DLP/CPS classifier rules (regex, dictionaries, scoring) from natural-language examples — turning new policy intent into shippable detection without hand-crafted patterns.",
+  },
+];
+
+function findPromotion(title: string): Promotion | undefined {
+  const t = title.trim().toLowerCase();
+  return PROMOTIONS.find((p) => p.match.toLowerCase() === t);
+}
 
 type Card = {
   key: string;
@@ -89,28 +105,40 @@ export default async function RoadmapPage() {
     .from(submissions)
     .orderBy(asc(submissions.createdAt));
 
-  // Map accepted submissions → roadmap cards.
+  // Map accepted submissions → roadmap cards. Promotions let us merge a
+  // submitted idea with a strategic ask (rebrand + override summary) so
+  // we don't end up with near-duplicate cards on the slide.
   const submitted: Card[] = accepted
     .filter((s) => s.status === "accepted")
-    .map((s) => ({
-      key: s.id,
-      title: s.title,
-      summary: summarise(s.description),
-      category: (s.category as CategoryKey) ?? "other",
-      categoryOther: s.categoryOther ?? null,
-      developers: s.developers,
-      needsImmediateImpl: s.needsImmediateImpl,
-      shortId: s.id.slice(0, 4).toUpperCase(),
-    }));
+    .map((s) => {
+      const promo = findPromotion(s.title);
+      return {
+        key: s.id,
+        title: promo?.title ?? s.title,
+        summary: promo?.summary ?? summarise(s.description),
+        category: (s.category as CategoryKey) ?? "other",
+        categoryOther: s.categoryOther ?? null,
+        developers: s.developers,
+        needsImmediateImpl: s.needsImmediateImpl,
+        pinned: !!promo,
+        shortId: s.id.slice(0, 4).toUpperCase(),
+      };
+    });
 
-  // Group: pinned extras at the top of their stage, then submitted ideas.
+  // Group: pinned (strategic + promoted) at the top of their stage, then
+  // the remaining submissions in chronological order.
   const cardsByStage = new Map<CategoryKey, Card[]>();
   for (const e of EXTRA_SKILLS) {
     const list = cardsByStage.get(e.category) ?? [];
     list.push({ ...e, pinned: true });
     cardsByStage.set(e.category, list);
   }
-  for (const c of submitted) {
+  for (const c of submitted.filter((s) => s.pinned)) {
+    const list = cardsByStage.get(c.category) ?? [];
+    list.push(c);
+    cardsByStage.set(c.category, list);
+  }
+  for (const c of submitted.filter((s) => !s.pinned)) {
     const list = cardsByStage.get(c.category) ?? [];
     list.push(c);
     cardsByStage.set(c.category, list);
