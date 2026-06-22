@@ -1,0 +1,1 @@
+ALTER TABLE "submissions" ADD COLUMN "picked_for_quarter" boolean DEFAULT false NOT NULL;

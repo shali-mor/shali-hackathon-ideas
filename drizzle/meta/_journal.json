@@ -50,6 +50,13 @@
       "when": 1781436104372,
       "tag": "0006_previous_the_enforcers",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782162270559,
+      "tag": "0007_tough_vapor",
+      "breakpoints": true
     }
   ]
 }

@@ -45,6 +45,10 @@ export const submissions = pgTable("submissions", {
   // Set by an admin from the semi-final leaderboard to mark ideas that
   // shouldn't wait for the regular roadmap — implement now.
   needsImmediateImpl: boolean("needs_immediate_impl").notNull().default(false),
+  // Set by an admin from /roadmap to pick the subset of ideas the org
+  // commits to building during the current quarter. Unpicked ideas stay
+  // visible but greyed out below the picks.
+  pickedForQuarter: boolean("picked_for_quarter").notNull().default(false),
   reviewNote: text("review_note"),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true, mode: "date" }),
   reviewedByEmail: text("reviewed_by_email"),
