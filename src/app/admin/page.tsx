@@ -102,6 +102,20 @@ export default async function AdminPage({
               <span className="text-xs opacity-70">↗</span>
             </Link>
             <Link
+              href="/roadmap"
+              className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold border transition"
+              style={{
+                borderColor:
+                  "color-mix(in oklab, var(--color-accent-3) 55%, transparent)",
+                background:
+                  "color-mix(in oklab, var(--color-accent-3) 14%, transparent)",
+                color: "var(--color-accent-3)",
+              }}
+            >
+              <span aria-hidden>🗺️</span>
+              <span>Roadmap</span>
+            </Link>
+            <Link
               href="/ideas/export"
               className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium border border-[color:var(--color-border)] text-[color:var(--color-muted)] hover:text-[color:var(--color-foreground)] hover:border-[color:var(--color-accent-2)]/40 transition"
             >
