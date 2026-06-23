@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { asc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
@@ -17,9 +16,15 @@ import { togglePickedForQuarter } from "@/app/admin/actions";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "AI Skills Roadmap · Forcepoint Hackathon",
+  title: "AI Skills Roadmap",
   description:
-    "Quarterly AI-skills roadmap synthesised from the hackathon ideas.",
+    "Forcepoint engineering's quarterly AI-skills plan — what we're building across the SDLC.",
+  openGraph: {
+    title: "AI Skills Roadmap",
+    description:
+      "Forcepoint engineering's quarterly AI-skills plan — what we're building across the SDLC.",
+    type: "website",
+  },
 };
 
 // Two strategic additions that aren't hackathon submissions but belong on
@@ -102,8 +107,10 @@ function summarise(text: string, max = 180): string {
 }
 
 export default async function RoadmapPage() {
+  // Roadmap is public — anyone can view. Admin viewers get edit controls
+  // (pick toggle); everyone else sees a read-only board.
   const session = await getSession();
-  if (!isAdmin(session?.user?.email)) redirect("/");
+  const canEdit = isAdmin(session?.user?.email);
 
   const accepted = await db
     .select()
@@ -305,6 +312,7 @@ export default async function RoadmapPage() {
                       n={cardIndex}
                       card={c}
                       color={color}
+                      canEdit={canEdit}
                     />
                   );
                 })}
@@ -356,10 +364,10 @@ export default async function RoadmapPage() {
           Unpicked — greyed and sunk below
         </span>
         <Link
-          href="/admin"
+          href={canEdit ? "/admin" : "/"}
           className="ml-auto text-[color:var(--color-muted)] hover:text-[color:var(--color-foreground)] underline underline-offset-2"
         >
-          ← Back to Admin
+          ← {canEdit ? "Back to Admin" : "Back to hack.fp"}
         </Link>
       </footer>
     </div>
@@ -370,10 +378,12 @@ function SkillCard({
   n,
   card,
   color,
+  canEdit,
 }: {
   n: number;
   card: Card;
   color: string;
+  canEdit: boolean;
 }) {
   const display = categoryDisplay(card.category, card.categoryOther);
   const flagged = card.needsImmediateImpl;
@@ -499,7 +509,7 @@ function SkillCard({
         <div className="text-[10px] tabular-nums text-[color:var(--color-muted)]/60 font-mono">
           {card.shortId ? `ID · ${card.shortId}` : ""}
         </div>
-        {card.submissionId ? (
+        {card.submissionId && canEdit ? (
           <form action={togglePickedForQuarter}>
             <input type="hidden" name="id" value={card.submissionId} />
             <input
@@ -531,9 +541,30 @@ function SkillCard({
               {picked ? "✓ Picked — undo" : "+ Pick for quarter"}
             </button>
           </form>
-        ) : (
+        ) : !card.submissionId ? (
           <span className="text-[11px] text-[color:var(--color-muted)] italic">
             Always in quarter
+          </span>
+        ) : (
+          <span
+            className="text-[11px] font-medium px-2.5 py-1 rounded-md border"
+            style={
+              picked
+                ? {
+                    borderColor:
+                      "color-mix(in oklab, var(--color-success) 40%, transparent)",
+                    background:
+                      "color-mix(in oklab, var(--color-success) 10%, transparent)",
+                    color: "var(--color-success)",
+                  }
+                : {
+                    borderColor: "color-mix(in oklab, white 12%, transparent)",
+                    background: "transparent",
+                    color: "var(--color-muted)",
+                  }
+            }
+          >
+            {picked ? "✓ In quarter" : "Not picked"}
           </span>
         )}
       </div>

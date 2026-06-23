@@ -6,6 +6,7 @@ import { getSession } from "@/lib/session";
 import { isAdmin } from "@/lib/admin";
 import { signOutAction } from "@/app/auth/signin/action";
 import { BrandMark } from "@/components/Brand";
+import { AppHeaderGate } from "@/components/AppHeaderGate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        <AppHeaderGate>
         <header className="sticky top-0 z-40 backdrop-blur-md bg-[color:var(--color-background)]/70 border-b border-[color:var(--color-border)]">
           <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2.5">
@@ -128,13 +130,16 @@ export default async function RootLayout({
             </div>
           </div>
         </header>
+        </AppHeaderGate>
 
-        <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-10">{children}</main>
+        <main className="flex-1 w-full mx-auto px-4 py-10 max-w-6xl">{children}</main>
 
-        <footer className="border-t border-[color:var(--color-border)] py-6 text-center text-xs text-[color:var(--color-muted)]">
-          <span className="dot-live mr-2 align-middle" />
-          Hackathon · 2026-06-09 · judging 2026-06-11
-        </footer>
+        <AppHeaderGate>
+          <footer className="border-t border-[color:var(--color-border)] py-6 text-center text-xs text-[color:var(--color-muted)]">
+            <span className="dot-live mr-2 align-middle" />
+            Hackathon · 2026-06-09 · judging 2026-06-11
+          </footer>
+        </AppHeaderGate>
       </body>
     </html>
   );
